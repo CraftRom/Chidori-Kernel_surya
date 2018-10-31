@@ -4712,6 +4712,7 @@ static struct platform_driver fastrpc_driver = {
 #ifdef CONFIG_PM_SLEEP
 		.pm = &fastrpc_pm,
 #endif
+		.probe_type = PROBE_FORCE_SYNCHRONOUS,
 	},
 };
 
