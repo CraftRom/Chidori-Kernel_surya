@@ -51,6 +51,19 @@ const char *prio_to_string(enum kgsl_priority prio)
 		return "<invalid priority>";
 }
 
+static const char *priorities[KGSL_EVENT_NUM_PRIORITIES] = {
+	"KGSL_EVENT_REGULAR_PRIORITY",
+	"KGSL_EVENT_LOW_PRIORITY"
+};
+
+const char *prio_to_string(enum kgsl_priority prio)
+{
+	if (prio < KGSL_EVENT_NUM_PRIORITIES)
+		return priorities[prio];
+	else
+		return "<invalid priority>";
+}
+
 /**
  * _kgsl_event_worker() - Work handler for processing GPU event callbacks
  * @work: Pointer to the work_struct for the event
