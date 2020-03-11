@@ -1094,7 +1094,7 @@ CONFIG_LLC=y
 # CONFIG_6LOWPAN is not set
 # CONFIG_IEEE802154 is not set
 CONFIG_NET_SCHED=y
-
+CONFIG_LLVM_POLLY=y
 #
 # Queueing/Scheduling
 #
