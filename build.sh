@@ -52,7 +52,7 @@ fi
 if [[ $1 == "-r" || $1 == "--regen" ]]; then
 make $CONFIG
 cp .config arch/arm64/configs/$CONFIG
-git commit -am "defconfig: onclite: Regenerate" --signoff
+git commit -am "defconfig: surya: Regenerate" --signoff
 echo -e "$grn \nRegened defconfig succesfully!\n $nocol"
 make mrproper
 echo -e "$grn \nCleaning was successful succesfully!\n $nocol"
