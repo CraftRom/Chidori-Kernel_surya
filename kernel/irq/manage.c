@@ -1570,7 +1570,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
 		}
 
-		if (new->flags & (IRQF_PERF_AFFINE)) {
+		if (new->flags & IRQF_PERF_AFFINE) {
 			affine_one_perf_thread(new);
 			irqd_set(&desc->irq_data, IRQD_PERF_CRITICAL);
 			*old_ptr = new;

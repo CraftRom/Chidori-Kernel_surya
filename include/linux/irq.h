@@ -238,6 +238,7 @@ enum {
 	IRQD_DEFAULT_TRIGGER_SET	= (1 << 25),
 	IRQD_PERF_CRITICAL		= (1 << 26),
 	IRQD_AFFINITY_ON_ACTIVATE	= (1 << 29),
+	IRQD_PERF_CRITICAL		= (1 << 26),
 };
 
 #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
