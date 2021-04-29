@@ -536,8 +536,17 @@ static int smb5_parse_dt(struct smb5 *chip)
 	chip->dt.no_battery = of_property_read_bool(node,
 						"qcom,batteryless-platform");
 
-	rc = of_property_read_u32(node,
-			"qcom,fcc-max-ua", &chip->dt.batt_profile_fcc_ua);
+    if ((strnstr(saved_command_line, "androidboot.hwname=karna", strlen(saved_command_line)) != NULL) ) {
+    	rc = of_property_read_u32(node,
+			"qcom,fcc-max-ua-karna", &chip->dt.batt_profile_fcc_ua);
+            //chip->dt.batt_profile_fcc_ua = 6000000;
+			dev_err(chg->dev,"karna: batt_profile_fcc_ua = %d\n", chip->dt.batt_profile_fcc_ua);
+    } else {
+    	rc = of_property_read_u32(node,
+			"qcom,fcc-max-ua-surya", &chip->dt.batt_profile_fcc_ua);
+            //chip->dt.batt_profile_fcc_ua = 5000000;
+			dev_err(chg->dev,"surya: batt_profile_fcc_ua = %d\n", chip->dt.batt_profile_fcc_ua);
+    }
 	if (rc < 0)
 		chip->dt.batt_profile_fcc_ua = -EINVAL;
 
@@ -3942,7 +3951,7 @@ static int step_otg_chg_notifier_call(struct notifier_block *nb,
 
 	if (event != PSY_EVENT_PROP_CHANGED)
 		return NOTIFY_OK;
-	pr_err("longcheer ,%s:reverse_charge_state=%d\n",__func__,chg->reverse_charge_state);
+	pr_debug("longcheer ,%s:reverse_charge_state=%d\n",__func__,chg->reverse_charge_state);
 	if(!chg->reverse_charge_state)
 		return NOTIFY_OK;
 
