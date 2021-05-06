@@ -59,6 +59,41 @@ static DEFINE_SPINLOCK(suspend_lock);
 
 #define TAG "msm_adreno_tz: "
 
+#define show_attr(name) \
+static ssize_t show_##name(struct device *dev,				\
+			struct device_attribute *attr, char *buf)	\
+{									\
+	struct devfreq *df = to_devfreq(dev);				\
+	struct devfreq_msm_adreno_tz_data *hw = df->data;				\
+	return snprintf(buf, PAGE_SIZE, "%u\n", hw->name);		\
+}
+
+#define store_attr(name, _min, _max) \
+static ssize_t store_##name(struct device *dev,				\
+			struct device_attribute *attr, const char *buf,	\
+			size_t count)					\
+{									\
+	struct devfreq *df = to_devfreq(dev);				\
+	struct devfreq_msm_adreno_tz_data *hw = df->data;				\
+	int ret;							\
+	int val;						\
+	ret = kstrtouint(buf, 10, &val);				\
+	if (ret)							\
+		return ret;						\
+	val = max(val, _min);						\
+	val = min(val, _max);						\
+	hw->name = val;							\
+	return count;							\
+}
+
+#define gov_attr(__attr, min, max)	\
+show_attr(__attr)			\
+store_attr(__attr, min, max)		\
+static DEVICE_ATTR(__attr, 0644, show_##__attr, store_##__attr)
+
+gov_attr(load_mul,0,10);
+gov_attr(load_div,0,10);
+
 static u64 suspend_time;
 static u64 suspend_start;
 static unsigned long acc_total, acc_relative_busy;
@@ -136,6 +171,8 @@ static DEVICE_ATTR(suspend_time, 0444,
 static const struct device_attribute *adreno_tz_attr_list[] = {
 		&dev_attr_gpu_load,
 		&dev_attr_suspend_time,
+        &dev_attr_load_mul,
+        &dev_attr_load_div,
 		NULL
 };
 
@@ -391,10 +428,13 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
-		if (refresh_rate > 60)
-			scm_data[2] = priv->bin.busy_time * refresh_rate / 60;
-		else
+
+        if( priv->load_mul != 0 ) {
+    		scm_data[2] = (priv->bin.busy_time * (10 + priv->load_mul)) / 10;
+        } else {
 			scm_data[2] = priv->bin.busy_time;
+        }
+
 		scm_data[3] = context_count;
 		__secure_tz_update_entry3(scm_data, sizeof(scm_data),
 					&val, sizeof(val), priv);
