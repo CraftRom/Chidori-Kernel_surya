@@ -61,6 +61,7 @@ struct devfreq_msm_adreno_tz_data {
 	bool ctxt_aware_enable;
     int load_mul;
     int load_div;
+    int scale_by_refresh_rate;
 };
 
 struct msm_adreno_extended_profile {
