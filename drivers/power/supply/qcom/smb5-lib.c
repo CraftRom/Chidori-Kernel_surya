@@ -2819,25 +2819,32 @@ int smblib_set_prop_system_temp_level(struct smb_charger *chg,
 	if (val->intval > chg->thermal_levels)
 		return -EINVAL;
 
+	pr_info("%s val=%d, chg->system_temp_level=%d, LctThermal=%d, lct_backlight_off= %d, IsInCall=%d" 
+		,__FUNCTION__,val->intval,chg->system_temp_level, LctThermal, lct_backlight_off, LctIsInCall);
+
 	if (LctThermal == 0) { //from therml-engine always store lvl_sel
 		lct_therm_lvl_reserved.intval = val->intval;
 	}
 
 	/*backlight off and not-incall*/
 	if ((lct_backlight_off) && (LctIsInCall == 0) && (val->intval > LCT_THERM_LCDOFF_LEVEL)) {
-		pr_info("leve ignored:backlight_off:%d level:%d",lct_backlight_off,val->intval);
-		return 0;
+		pr_info("%s leve ignored:backlight_off:%d level:%d",__FUNCTION__,lct_backlight_off,val->intval);
+		//return 0;
 	}
 
 	if ((LctIsInCall == 1) && (val->intval != LCT_THERM_CALL_LEVEL)) {
-		pr_info("leve ignored:LctIsInCall:%d level:%d",LctIsInCall,val->intval);
-		return 0;
-	}
+		pr_info("%s leve ignored:LctIsInCall:%d level:%d",__FUNCTION__,LctIsInCall,val->intval);
+        chg->system_temp_level = LCT_THERM_CALL_LEVEL;
+		//return 0;
+	} else {
 
-	if (val->intval == chg->system_temp_level)
-		return 0;
+    	if (val->intval == chg->system_temp_level)
+    		return 0;
 
-	chg->system_temp_level = val->intval;
+    	chg->system_temp_level = val->intval;
+    }
+	pr_info("%s intval:%d system temp level:%d thermal_levels:%d",
+		__FUNCTION__,val->intval,chg->system_temp_level,chg->thermal_levels);
 
 	if (chg->system_temp_level == chg->thermal_levels)
 		return vote(chg->chg_disable_votable,
