@@ -460,7 +460,7 @@
 	qcom,sec-charger-config = <0>;
 	qcom,thermal-mitigation = <6000000 5500000 5000000 5000000 5000000 4400000 4200000
 				   3800000 3800000 3600000 3400000 3200000 3000000 2200000
-				   800000 700000>;
+				   1500000 900000>;
 	dpdm-supply = <&qusb_phy0>;
 	qcom,charger-temp-max = <800>;
 	qcom,smb-temp-max = <800>;
