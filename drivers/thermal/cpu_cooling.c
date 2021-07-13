@@ -300,7 +300,7 @@ static int cpufreq_thermal_notifier(struct notifier_block *nb,
 	unsigned long clipped_freq = ULONG_MAX, floor_freq = 0;
 	struct cpufreq_cooling_device *cpufreq_cdev;
 
-	if (event != CPUFREQ_INCOMPATIBLE)
+	if (event != CPUFREQ_THERMAL && event != CPUFREQ_INCOMPATIBLE)
 		return NOTIFY_DONE;
 
 	mutex_lock(&cooling_list_lock);
@@ -336,6 +336,36 @@ static int cpufreq_thermal_notifier(struct notifier_block *nb,
 	mutex_unlock(&cooling_list_lock);
 
 	return NOTIFY_OK;
+}
+
+void cpu_limits_set_level(unsigned int cpu, unsigned int max_freq)
+{
+	struct cpufreq_cooling_device *cpufreq_cdev;
+	struct thermal_cooling_device *cdev;
+	unsigned int level;
+
+    pr_info("cpu_limits_set_level %u, %u", cpu, max_freq);
+
+	list_for_each_entry(cpufreq_cdev, &cpufreq_cdev_list, node) {
+
+   		dev_info(&cpufreq_cdev->cdev->device,
+    	 "Looking for cpu %u in device %s with id %u\n", cpu, cpufreq_cdev->cdev->type,cpufreq_cdev->id );
+
+		if (cpufreq_cdev->id == cpu) {
+			for (level = 0; level < cpufreq_cdev->max_level; level++) {
+				int target_freq = cpufreq_cdev->freq_table[level].frequency;
+				if (max_freq >= target_freq) {
+					cdev = cpufreq_cdev->cdev;
+					if (cdev)
+						cdev->ops->set_cur_state(cdev, level);
+
+					break;
+				}
+			}
+
+			break;
+		}
+	}
 }
 
 /**
@@ -408,6 +438,7 @@ static int update_freq_table(struct cpufreq_cooling_device *cpufreq_cdev,
 
 		/* power is stored in mW */
 		freq_table[i].power = power;
+        pr_info("cpu %u, idx %d, freq %d, power %d",  cpufreq_cdev->id, i, freq_table[i].frequency, freq_table[i].power);
 	}
 
 	return 0;
@@ -1048,7 +1079,7 @@ __cpufreq_cooling_register(struct device_node *np,
 		if (!freq)
 			pr_warn("%s: table has duplicate entries\n", __func__);
 		else
-			pr_debug("%s: freq:%u KHz\n", __func__, freq);
+			pr_info("%s: freq:%u KHz\n", __func__, freq);
 	}
 
 	/* Max level index is for core isolation, set this level as zero */
