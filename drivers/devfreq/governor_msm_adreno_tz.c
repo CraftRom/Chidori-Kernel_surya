@@ -91,8 +91,8 @@ show_attr(__attr)			\
 store_attr(__attr, min, max)		\
 static DEVICE_ATTR(__attr, 0644, show_##__attr, store_##__attr)
 
-gov_attr(load_mul,-10,10);
-gov_attr(load_div,-10,10);
+gov_attr(load_mul,-30,30);
+gov_attr(load_div,-30,30);
 gov_attr(scale_by_refresh_rate,0,1);
 
 static u64 suspend_time;
