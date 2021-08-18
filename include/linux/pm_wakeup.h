@@ -74,6 +74,8 @@ struct wakeup_source {
 	struct device		*dev;
 	bool			active:1;
 	bool			autosleep_enabled:1;
+    bool            disabled:1;
+    bool            forced:1;
 };
 
 #ifdef CONFIG_PM_SLEEP

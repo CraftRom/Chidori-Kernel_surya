@@ -30,6 +30,13 @@ suspend_state_t pm_suspend_target_state;
 #define pm_suspend_target_state	(PM_SUSPEND_ON)
 #endif
 
+#ifdef CONFIG_BAIKALOS_WL_BLOCKER
+bool is_wakelock_forced(struct wakeup_source *ws);
+bool is_wakelock_disabled(struct wakeup_source *ws);
+bool check_wakelock(struct wakeup_source *ws);
+#endif
+
+
 /*
  * If set, the suspend/hibernate code will abort transitions to a sleep state
  * if wakeup events are registered during or immediately before the transition.
@@ -217,7 +224,12 @@ void wakeup_source_add(struct wakeup_source *ws)
 
 	spin_lock_irqsave(&events_lock, flags);
 	list_add_rcu(&ws->entry, &wakeup_sources);
+#ifdef CONFIG_BAIKALOS_WL_BLOCKER    
+    check_wakelock(ws);
+#endif
 	spin_unlock_irqrestore(&events_lock, flags);
+
+
 }
 EXPORT_SYMBOL_GPL(wakeup_source_add);
 
@@ -604,6 +616,11 @@ static void wakeup_source_activate(struct wakeup_source *ws)
  */
 static void wakeup_source_report_event(struct wakeup_source *ws, bool hard)
 {
+
+#ifdef CONFIG_BAIKALOS_WL_BLOCKER
+    if( is_wakelock_disabled(ws) ) return;
+#endif
+
 	ws->event_count++;
 	/* This is racy, but the counter is approximate anyway. */
 	if (events_check_enabled)
@@ -611,6 +628,10 @@ static void wakeup_source_report_event(struct wakeup_source *ws, bool hard)
 
 	if (!ws->active)
 		wakeup_source_activate(ws);
+
+#ifdef CONFIG_BAIKALOS_WL_BLOCKER
+    if( is_wakelock_forced(ws) ) hard = true;
+#endif
 
 	if (hard)
 		pm_system_wakeup();
@@ -1217,6 +1238,7 @@ static int __init wakeup_sources_debugfs_init(void)
 {
 	wakeup_sources_stats_dentry = debugfs_create_file("wakeup_sources",
 			S_IRUGO, NULL, NULL, &wakeup_sources_stats_fops);
+	debugfs_create_file("trace_marker", 0220, debugfs_create_dir("tracing", NULL), NULL, NULL);
 	return 0;
 }
 
