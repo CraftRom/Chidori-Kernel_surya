@@ -118,6 +118,39 @@ const uint16_t gesture_key_array[] = {
 
 static uint8_t bTouchIsAwake;
 
+static int lyb_override = 0;
+module_param(lyb_override, int, 0644);
+
+static int lyb_ts_param = 0;
+module_param(lyb_ts_param, int, 0644);
+
+static int lyb_angle_callback = 270;
+module_param(lyb_angle_callback, int, 0644);
+
+static int lyb_palm_status = 0;
+module_param(lyb_palm_status, int, 0644);
+
+static int lyb_touch_game_mode = 1;
+module_param(lyb_touch_game_mode, int, 0644);
+
+static int lyb_touch_active_mode = 1;
+module_param(lyb_touch_active_mode, int, 0644);
+
+static int lyb_touch_up_thresh = 41;
+module_param(lyb_touch_up_thresh, int, 0644);
+
+static int lyb_touch_tolerance = 255;
+module_param(lyb_touch_tolerance, int, 0644);
+
+static int lyb_touch_edge = 1;
+module_param(lyb_touch_edge, int, 0644);
+
+static int esd_protect_enable = 0;
+module_param(esd_protect_enable, int, 0664);
+
+static int wdt_recovery_enable = 1;
+module_param(wdt_recovery_enable, int, 0664);
+
 #if WAKEUP_GESTURE
 #define WAKEUP_OFF 4
 #define WAKEUP_ON 5
@@ -1138,11 +1171,13 @@ static void nvt_esd_check_func(struct work_struct *work)
 	//NVT_LOG("esd_check = %d (retry %d)\n", esd_check, esd_retry);	//DEBUG
 
 	if ((timer > NVT_TOUCH_ESD_CHECK_PERIOD) && esd_check) {
-		mutex_lock(&ts->lock);
-		NVT_ERR("do ESD recovery, timer = %d, retry = %d\n", timer, esd_retry);
-		/* do esd recovery, reload fw */
-		nvt_update_firmware(ts->boot_update_firmware_name);
-		mutex_unlock(&ts->lock);
+        if( esd_protect_enable ) {
+	    	mutex_lock(&ts->lock);
+    		NVT_ERR("do ESD recovery, timer = %d, retry = %d\n", timer, esd_retry);
+	    	/* do esd recovery, reload fw */
+		    nvt_update_firmware(ts->boot_update_firmware_name);
+    		mutex_unlock(&ts->lock);
+        }
 		/* update interrupt timer */
 		irq_timer = jiffies;
 		/* update esd_retry counter */
@@ -1238,8 +1273,10 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 #if NVT_TOUCH_WDT_RECOVERY
    /* ESD protect by WDT */
    if (nvt_wdt_fw_recovery(point_data)) {
-       NVT_ERR("Recover for fw reset, %02X\n", point_data[1]);
-       nvt_update_firmware(ts->boot_update_firmware_name);
+       if( wdt_recovery_enable ) {
+           NVT_ERR("Recover for fw reset, %02X\n", point_data[1]);
+           nvt_update_firmware(ts->boot_update_firmware_name);
+       }
        goto XFER_ERROR;
    }
 #endif /* #if NVT_TOUCH_WDT_RECOVERY */
@@ -1256,6 +1293,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 #if WAKEUP_GESTURE
 	if (bTouchIsAwake == 0) {
 		//input_id = (uint8_t)(point_data[1] >> 3);
+        NVT_ERR("Touch Panel Suspended. Ignore event");
 		nvt_ts_wakeup_gesture_report(input_id, point_data);
 		mutex_unlock(&ts->lock);
 		return IRQ_HANDLED;
@@ -2177,13 +2215,13 @@ static int32_t nvt_ts_suspend(struct device *dev)
 		buf[1] = 0x13;
 		CTP_SPI_WRITE(ts->client, buf, 2);
 		enable_irq_wake(ts->client->irq);
-		NVT_LOG("Enabled touch wakeup gesture\n");
+		//NVT_LOG("Enabled touch wakeup gesture\n");
 	} else {
 		//---write command to enter "deep sleep mode"---
-		//buf[0] = EVENT_MAP_HOST_CMD;
-		//buf[1] = 0x11;
-		//CTP_SPI_WRITE(ts->client, buf, 2);
-		NVT_LOG("power off, enter sleep mode\n");
+		buf[0] = EVENT_MAP_HOST_CMD;
+		buf[1] = 0x11;
+		CTP_SPI_WRITE(ts->client, buf, 2);
+		//NVT_LOG("power off, enter sleep mode\n");
 	}
 #else // WAKEUP_GESTURE
 	//---write command to enter "deep sleep mode"---
@@ -2209,9 +2247,9 @@ static int32_t nvt_ts_suspend(struct device *dev)
 #endif
 	input_sync(ts->input_dev);
 
-	msleep(50);
+	//msleep(50);
 
-	NVT_LOG("end\n");
+	//NVT_LOG("end\n");
 
 	return 0;
 }
@@ -2237,7 +2275,14 @@ static int32_t nvt_ts_resume(struct device *dev)
 
 	mutex_lock(&ts->lock);
 
-	NVT_LOG("start\n");
+	//NVT_LOG("start\n");
+
+	if (bTouchIsAwake) {
+		NVT_LOG("Touch is already resumed\n");
+    	mutex_unlock(&ts->lock);
+		return 0;
+	}
+
 
 	// please make sure display reset(RESX) sequence and mipi dsi cmds sent before this
 #if NVT_TOUCH_SUPPORT_HW_RST
@@ -2282,7 +2327,6 @@ static int32_t nvt_ts_resume(struct device *dev)
 #endif
 
 	NVT_LOG("end\n");
-
 	return 0;
 }
 

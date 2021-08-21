@@ -89,7 +89,7 @@ extern const uint16_t gesture_key_array[];
 #define MP_UPDATE_HUAXING_FIRMWARE_NAME      "novatek_ts_huaxing_mp.bin"
 
 //---ESD Protect.---
-#define NVT_TOUCH_ESD_PROTECT 0
+#define NVT_TOUCH_ESD_PROTECT 1
 #define NVT_TOUCH_ESD_CHECK_PERIOD 1500	/* ms */
 #define NVT_TOUCH_WDT_RECOVERY 0
 #define NVT_TOUCH_ESD_DISP_RECOVERY 0
