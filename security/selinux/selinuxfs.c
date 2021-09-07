@@ -163,17 +163,28 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 	if (sscanf(page, "%d", &new_value) != 1)
 		goto out;
 
+	old_value = enforcing_enabled(state);
+
     if( new_value == 2 ) {
         fool_enforcing = 1;
         length = count;    
-		goto out;
+		if( old_value == 0 ) goto out;
+        new_value = 0;
+    } else if( new_value == 3 ) {
+        fool_enforcing = 0;
+        length = count;    
+		if( old_value == 1 ) goto out;
+        new_value = 1;
+    } else if( fool_enforcing && new_value == 1 ) {
+        length = count;    
+		if( old_value == 0 ) goto out;
+        new_value = 0;
+    } else {
+        fool_enforcing = 0;
     }
-
-    fool_enforcing = 0;
 
 	new_value = !!new_value;
 
-	old_value = enforcing_enabled(state);
 	if (new_value != old_value) {
 		length = avc_has_perm(&selinux_state,
 				      current_sid(), SECINITSID_SECURITY,
