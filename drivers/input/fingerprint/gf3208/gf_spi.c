@@ -345,8 +345,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 {
 #if defined(GF_NETLINK_ENABLE)
 	char msg[2] =  { 0x0 };
-	//wake_lock_timeout(&fp_wakelock, msecs_to_jiffies(WAKELOCK_HOLD_TIME));
-	__pm_wakeup_event(&fp_ws, WAKELOCK_HOLD_TIME);//for kernel 4.9
+    pm_wakeup_ws_event(&fp_ws, 2000, true);
 	msg[0] = GF_NET_EVENT_IRQ;
 	sendnlmsg(msg);
 #elif defined(GF_FASYNC)
