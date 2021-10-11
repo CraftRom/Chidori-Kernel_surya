@@ -61,7 +61,7 @@
 
 #define LIMITS_FREQ_CAP			0x46434150
 
-#define LIMITS_TEMP_DEFAULT		75000
+#define LIMITS_TEMP_DEFAULT		105000
 #define LIMITS_TEMP_HIGH_THRESH_MAX	120000
 #define LIMITS_LOW_THRESHOLD_OFFSET	500
 #define LIMITS_POLLING_DELAY_MS		10
@@ -289,12 +289,15 @@ static int limits_dcvs_write(uint32_t node_id, uint32_t fn,
 
 static int lmh_get_temp(void *data, int *val)
 {
+	struct limits_dcvs_hw *hw = (struct limits_dcvs_hw *)data;
+
 	/*
 	 * LMH DCVSh hardware doesn't support temperature read.
 	 * return a default value for the thermal core to aggregate
 	 * the thresholds
 	 */
-	*val = LIMITS_TEMP_DEFAULT;
+	//*val = hw->temp_limits[LIMITS_TRIP_HI]; //LIMITS_TEMP_DEFAULT;
+	*val = 50000;
 
 	return 0;
 }
@@ -303,6 +306,18 @@ static int lmh_set_trips(void *data, int low, int high)
 {
 	struct limits_dcvs_hw *hw = (struct limits_dcvs_hw *)data;
 	int ret = 0;
+
+    //if (high >= LIMITS_TEMP_HIGH_THRESH_MAX  && low > 0 && low < 105000)  {
+    //    high = low + 5000;
+    //}
+
+	pr_err("lmh_set_trips: 1 low:%d high:%d\n",low, high);
+
+    if( low == -2147483648 ) low = high-5000;
+    if( high == 2147483647 ) high = low+5000;
+
+	pr_err("lmh_set_trips: 2 low:%d high:%d\n",low, high);
+
 
 	if (high >= LIMITS_TEMP_HIGH_THRESH_MAX || low < 0) {
 		pr_err("Value out of range low:%d high:%d\n",
