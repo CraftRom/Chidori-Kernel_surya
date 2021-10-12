@@ -1002,7 +1002,6 @@ static void sugov_exit(struct cpufreq_policy *policy)
 	policy->governor_data = NULL;
 	if (!count) {
 		sugov_clear_global_tunables();
-		sugov_tunables_free(tunables);
 	}
 
 	mutex_unlock(&global_tunables_lock);
