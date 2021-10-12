@@ -1755,6 +1755,8 @@ const char *cmd_set_prop_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-dispparam-cabcstillon-command",
 	"qcom,mdss-dsi-dispparam-cabcmovieon-command",
 	"qcom,mdss-dsi-dispparam-cabcoff-command",
+	"qcom,mdss-dsi-dispparam-dimmingoff-command",
+    "qcom,mdss-dsi-dispparam-dimmingon-command"
 };
 
 const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
@@ -1788,6 +1790,8 @@ const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-dispparam-cabcstillon-command-state",
 	"qcom,mdss-dsi-dispparam-cabcmovieon-command-state",
 	"qcom,mdss-dsi-dispparam-cabcoff-command-state",
+	"qcom,mdss-dsi-dispparam-dimmingoff-command-state",
+	"qcom,mdss-dsi-dispparam-dimmingon-command-state"
 };
 
 static int dsi_panel_get_cmd_pkt_count(const char *data, u32 length, u32 *cnt)
@@ -4278,11 +4282,14 @@ int dsi_panel_enable(struct dsi_panel *panel)
 		panel->panel_initialized = true;
 	mutex_unlock(&panel->panel_lock);
 
-	if (panel->hbm_mode)
+	//if (panel->hbm_mode)
 		dsi_panel_apply_hbm_mode(panel);
 
-	if (panel->cabc_mode)
+	//if (panel->cabc_mode)
 		dsi_panel_apply_cabc_mode(panel);
+
+    //if (panel->dimming_mode)
+		dsi_panel_apply_dimming_mode(panel);
 
 	return rc;
 }
@@ -4429,7 +4436,6 @@ int dsi_panel_apply_hbm_mode(struct dsi_panel *panel)
 	};
 
 	enum dsi_cmd_set_type type;
-	int rc;
 
 	if (panel->hbm_mode >= 0 &&
 		panel->hbm_mode < ARRAY_SIZE(type_map))
@@ -4437,11 +4443,8 @@ int dsi_panel_apply_hbm_mode(struct dsi_panel *panel)
 	else
 		type = type_map[0];
 
-	mutex_lock(&panel->panel_lock);
-	rc = dsi_panel_tx_cmd_set(panel, type);
-	mutex_unlock(&panel->panel_lock);
 
-	return rc;
+	return dsi_panel_set_feature(panel, type);
 }
 
 int dsi_panel_apply_cabc_mode(struct dsi_panel *panel)
@@ -4449,12 +4452,11 @@ int dsi_panel_apply_cabc_mode(struct dsi_panel *panel)
 	static const enum dsi_cmd_set_type type_map[] = {
 		DSI_CMD_SET_DISP_CABC_OFF,
 		DSI_CMD_SET_DISP_CABC_UI_ON,
-		DSI_CMD_SET_DISP_CABC_STILL_ON,
-		DSI_CMD_SET_DISP_CABC_MOVIE_ON
+		DSI_CMD_SET_DISP_CABC_MOVIE_ON,
+        DSI_CMD_SET_DISP_CABC_STILL_ON
 	};
 
 	enum dsi_cmd_set_type type;
-	int rc;
 
 	if (panel->cabc_mode >= 0 &&
 		panel->cabc_mode < ARRAY_SIZE(type_map))
@@ -4462,9 +4464,49 @@ int dsi_panel_apply_cabc_mode(struct dsi_panel *panel)
 	else
 		type = type_map[0];
 
-	mutex_lock(&panel->panel_lock);
-	rc = dsi_panel_tx_cmd_set(panel, type);
-	mutex_unlock(&panel->panel_lock);
+	return dsi_panel_set_feature(panel, type);
+}
 
-	return rc;
+int dsi_panel_apply_dimming_mode(struct dsi_panel *panel)
+{
+	static const enum dsi_cmd_set_type type_map[] = {
+		DSI_CMD_SET_DISP_DIMMING_OFF,
+		DSI_CMD_SET_DISP_DIMMING_ON,
+	};
+
+	enum dsi_cmd_set_type type;
+
+	if (panel->dimming_mode >= 0 &&
+		panel->dimming_mode < ARRAY_SIZE(type_map))
+		type = type_map[panel->dimming_mode];
+	else
+		type = type_map[0];
+
+	return dsi_panel_set_feature(panel, type);
+}
+
+int dsi_panel_set_feature(struct dsi_panel *panel, enum dsi_cmd_set_type type)
+{
+		int rc = 0;
+
+		if (!panel || type < 0 || type >= DSI_CMD_SET_MAX) {
+			pr_err("Invalid parameter %d\n", type);
+			return -EINVAL;
+		}
+
+		pr_info("xinj:%s panel_initialized=%d type=%d\n", __func__, panel->panel_initialized, type);
+		if (!panel->panel_initialized) {
+			pr_err("xinj: can't set cmds type=%d\n", type);
+			return -EINVAL;
+		}
+
+		mutex_lock(&panel->panel_lock);
+
+		rc = dsi_panel_tx_cmd_set(panel, type);
+		if (rc) {
+			pr_err("[%s] failed to send DSI_CMD_SET_FEATURE_ON/OFF cmds, rc=%d,type=%d\n",
+					panel->name, rc, type);
+		}
+		mutex_unlock(&panel->panel_lock);
+		return rc;
 }
