@@ -148,8 +148,8 @@ unsigned int __read_mostly sysctl_sched_energy_aware = 1;
  *
  * (default: 1 msec * (1 + ilog(ncpus)), units: nanoseconds)
  */
-unsigned int sysctl_sched_wakeup_granularity		= 1000000UL;
-unsigned int normalized_sysctl_sched_wakeup_granularity	= 1000000UL;
+unsigned int sysctl_sched_wakeup_granularity		= 2000000UL;
+unsigned int normalized_sysctl_sched_wakeup_granularity	= 2000000UL;
 
 const_debug unsigned int sysctl_sched_migration_cost	= 500000UL;
 DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
@@ -199,22 +199,22 @@ unsigned int sysctl_sched_capacity_margin_up[MAX_MARGIN_LEVELS] = {
 unsigned int sysctl_sched_capacity_margin_down[MAX_MARGIN_LEVELS] = {
 			[0 ... MAX_MARGIN_LEVELS-1] = 1205}; /* ~15% margin */
 unsigned int sysctl_sched_capacity_margin_up_boosted[MAX_MARGIN_LEVELS] = {
-	3658, 1078, 1024
+	4096, 4096, 4096
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 unsigned int sysctl_sched_capacity_margin_down_boosted[MAX_MARGIN_LEVELS] = {
-	[0 ... MAX_MARGIN_LEVELS-1] = 3658
+	[0 ... MAX_MARGIN_LEVELS-1] = 4096
 }; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 unsigned int sched_capacity_margin_up[CPU_NR] = {
 	[0 ... CPU_NR - 1] = 1078
 }; /* ~5% margin */
 unsigned int sched_capacity_margin_down[CPU_NR] = {
-	[0 ... CPU_NR - 1] = 1078
+	[0 ... CPU_NR - 1] = 1205
 }; /* ~5% margin */
 unsigned int sched_capacity_margin_up_boosted[CPU_NR] = {
-	3658, 3658, 3658, 3658, 3658, 3658, 1078, 1024
+	4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 unsigned int sched_capacity_margin_down_boosted[CPU_NR] = {
-	[0 ... CPU_NR - 1] = 3658
+	[0 ... CPU_NR - 1] = 4096
 }; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 
 
