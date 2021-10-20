@@ -29,8 +29,7 @@ CONFIG=vendor/surya-perf_defconfig
 
 # Export
 export ARCH=arm64
-export CROSS_COMPILE
-export CROSS_COMPILE_ARM32
+export CROSS_COMPILE=$HOME/toolchains/gcc64/bin/aarch64-linux-androidkernel-
 export KBUILD_BUILD_USER=melles1991
 export KBUILD_BUILD_HOST=CraftRom-build
 
@@ -52,7 +51,7 @@ fi
 if [[ $1 == "-r" || $1 == "--regen" ]]; then
 make $CONFIG
 cp .config arch/arm64/configs/$CONFIG
-git commit -am "defconfig: surya: Regenerate" --signoff
+git commit -am "defconfig: citrus: Regenerate" --signoff
 echo -e "$grn \nRegened defconfig succesfully!\n $nocol"
 make mrproper
 echo -e "$grn \nCleaning was successful succesfully!\n $nocol"
@@ -74,7 +73,7 @@ export PATH="$clang_bin:$PATH"
 echo -e "$blue    \nMake DefConfig\n $nocol"
 make	O=out $CONFIG
 echo -e "$blue    \nStarting kernel compilation...\n $nocol"
-make	-j`nproc --all` O=out ARCH=arm64 CC="clang" LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb dtbo.img
+make	-j`nproc --all` O=out ARCH=arm64 CC="clang" LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb
 
 if ! [ -a $KERN_IMG ]; then
     echo -e "$red \nKernel Compilation failed! Fix the errors!\n $nocol"
@@ -83,31 +82,7 @@ fi
 cd $ZIP_DIR
 make clean &>/dev/null
 cd ..
-
-# For MIUI Build
-# Credit Adek Maulana <adek@techdro.id>
-OUTDIR="$KERNEL_DIR/out/"
-VENDOR_MODULEDIR="$KERNEL_DIR/AnyKernel3/modules/vendor/lib/modules"
-
-STRIP="$HOME/toolchains/proton-clang/aarch64-linux-gnu/bin/strip$(echo "$(find "$HOME/toolchains/proton-clang/bin" -type f -name "aarch64-*-gcc")" | awk -F '/' '{print $NF}' |\
-            sed -e 's/gcc/strip/')"
-for MODULES in $(find "${OUTDIR}" -name '*.ko'); do
-    "${STRIP}" --strip-unneeded --strip-debug "${MODULES}"
-    "${OUTDIR}"/scripts/sign-file sha512 \
-            "${OUTDIR}/certs/signing_key.pem" \
-            "${OUTDIR}/certs/signing_key.x509" \
-            "${MODULES}"
-    find "${OUTDIR}" -name '*.ko' -exec cp {} "${VENDOR_MODULEDIR}" \;
-    case ${MODULES} in
-            */wlan.ko)
-        cp "${MODULES}" "${VENDOR_MODULEDIR}/pronto_wlan.ko" ;;
-    esac
-done
-
-cd libufdt/src && python2 mkdtboimg.py create $OUTDIR/arch/arm64/boot/dtbo.img $OUTDIR/arch/arm64/boot/dts/qcom/*.dtbo
-echo -e "$grn    \n(i)          Done moving modules\n $nocol"
-
-rm "${VENDOR_MODULEDIR}/wlan.ko"
+.
 
 cd $ZIP_DIR
 cp $KERN_IMG zImage
