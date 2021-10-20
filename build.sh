@@ -82,8 +82,11 @@ fi
 cd $ZIP_DIR
 make clean &>/dev/null
 cd ..
-.
 
+OUTDIR="$KERNEL_DIR/out/"
+cd libufdt/src && python2 mkdtboimg.py create $OUTDIR/arch/arm64/boot/dtbo.img $OUTDIR/arch/arm64/boot/dts/qcom/*.dtbo
+
+echo -e "$grn    \n(i)          Done moving modules\n $nocol"
 cd $ZIP_DIR
 cp $KERN_IMG zImage
 cp $OUTDIR/arch/arm64/boot/dtbo.img $ZIP_DIR
