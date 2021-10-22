@@ -345,7 +345,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 {
 #if defined(GF_NETLINK_ENABLE)
 	char msg[2] =  { 0x0 };
-    pm_wakeup_ws_event(&fp_ws, 2000, true);
+    pm_wakeup_ws_event(&fp_ws, 1000, true);
 	msg[0] = GF_NET_EVENT_IRQ;
 	sendnlmsg(msg);
 #elif defined(GF_FASYNC)
