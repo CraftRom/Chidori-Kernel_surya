@@ -191,7 +191,7 @@ unsigned int sysctl_sched_cfs_bandwidth_slice		= 5000UL;
  *
  * (default: ~20%)
  */
-unsigned int capacity_margin				= 1280;
+unsigned int capacity_margin				= 1024;
 
 /* Migration margins */
 unsigned int sysctl_sched_capacity_margin_up[MAX_MARGIN_LEVELS] = {
@@ -199,10 +199,11 @@ unsigned int sysctl_sched_capacity_margin_up[MAX_MARGIN_LEVELS] = {
 unsigned int sysctl_sched_capacity_margin_down[MAX_MARGIN_LEVELS] = {
 			[0 ... MAX_MARGIN_LEVELS-1] = 1205}; /* ~15% margin */
 unsigned int sysctl_sched_capacity_margin_up_boosted[MAX_MARGIN_LEVELS] = {
-	4096, 4096, 4096
+	1280, 1280, 1024
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 unsigned int sysctl_sched_capacity_margin_down_boosted[MAX_MARGIN_LEVELS] = {
-	[0 ... MAX_MARGIN_LEVELS-1] = 4096
+    //4096, 1280, 1024
+    1280, 1280, 1024
 }; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 unsigned int sched_capacity_margin_up[CPU_NR] = {
 	[0 ... CPU_NR - 1] = 1078
@@ -211,10 +212,11 @@ unsigned int sched_capacity_margin_down[CPU_NR] = {
 	[0 ... CPU_NR - 1] = 1205
 }; /* ~5% margin */
 unsigned int sched_capacity_margin_up_boosted[CPU_NR] = {
-	4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096
+	1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 unsigned int sched_capacity_margin_down_boosted[CPU_NR] = {
-	[0 ... CPU_NR - 1] = 4096
+	//4096, 4096, 4096, 4096, 4096, 4096, 1280, 1280
+    1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280
 }; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 
 
