@@ -258,6 +258,14 @@ static int limits_dcvs_write(uint32_t node_id, uint32_t fn,
 	uint32_t *payload = NULL;
 	uint32_t payload_len;
 
+
+    if( setting == LIMITS_ARM_THRESHOLD )
+        pr_info("limits_dcvs_write:%X arm at %u",node_id, val);
+    else if( setting == LIMITS_HI_THRESHOLD ) 
+        pr_info("limits_dcvs_write:%X high at %u",node_id, val);
+    else if( setting == LIMITS_FREQ_CAP )
+        pr_info("limits_dcvs_write:%X freq cap at %u",node_id, val);
+
 	payload_len = ((enable_val1) ? 6 : 5) * sizeof(uint32_t);
 	payload = kzalloc(payload_len, GFP_KERNEL);
 	if (!payload)
@@ -297,7 +305,7 @@ static int lmh_get_temp(void *data, int *val)
 	 * the thresholds
 	 */
 	//*val = hw->temp_limits[LIMITS_TRIP_HI]; //LIMITS_TEMP_DEFAULT;
-	*val = 50000;
+	*val = 20000;
 
 	return 0;
 }
