@@ -191,7 +191,7 @@ unsigned int sysctl_sched_cfs_bandwidth_slice		= 5000UL;
  *
  * (default: ~20%)
  */
-unsigned int capacity_margin				= 1280;
+unsigned int capacity_margin				= 1024;
 
 /* Migration margins */
 unsigned int sysctl_sched_capacity_margin_up[MAX_MARGIN_LEVELS] = {
@@ -7187,10 +7187,12 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 		bool idle = true;
 
 		for_each_cpu(cpu, cpu_smt_mask(core)) {
-			cpumask_clear_cpu(cpu, cpus);
-			if (!idle_cpu(cpu))
+			if (!idle_cpu(cpu)) {
 				idle = false;
+				break;
+			}
 		}
+		cpumask_andnot(cpus, cpus, cpu_smt_mask(core));
 
 		if (idle)
 			return core;

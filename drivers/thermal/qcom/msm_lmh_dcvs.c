@@ -304,7 +304,6 @@ static int lmh_get_temp(void *data, int *val)
 	 * return a default value for the thermal core to aggregate
 	 * the thresholds
 	 */
-	//*val = hw->temp_limits[LIMITS_TRIP_HI]; //LIMITS_TEMP_DEFAULT;
 	*val = 20000;
 
 	return 0;
