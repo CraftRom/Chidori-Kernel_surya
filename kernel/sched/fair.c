@@ -191,7 +191,7 @@ unsigned int sysctl_sched_cfs_bandwidth_slice		= 5000UL;
  *
  * (default: ~20%)
  */
-unsigned int capacity_margin				= 1024;
+unsigned int capacity_margin				= 1280;
 
 /* Migration margins */
 unsigned int sysctl_sched_capacity_margin_up[MAX_MARGIN_LEVELS] = {
@@ -199,11 +199,11 @@ unsigned int sysctl_sched_capacity_margin_up[MAX_MARGIN_LEVELS] = {
 unsigned int sysctl_sched_capacity_margin_down[MAX_MARGIN_LEVELS] = {
 			[0 ... MAX_MARGIN_LEVELS-1] = 1205}; /* ~15% margin */
 unsigned int sysctl_sched_capacity_margin_up_boosted[MAX_MARGIN_LEVELS] = {
-	1280, 1280, 1024
+	1205, 1205, 1205
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 unsigned int sysctl_sched_capacity_margin_down_boosted[MAX_MARGIN_LEVELS] = {
     //4096, 1280, 1024
-    1280, 1280, 1024
+    1280, 1280, 1280
 }; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 unsigned int sched_capacity_margin_up[CPU_NR] = {
 	[0 ... CPU_NR - 1] = 1078
@@ -212,7 +212,7 @@ unsigned int sched_capacity_margin_down[CPU_NR] = {
 	[0 ... CPU_NR - 1] = 1205
 }; /* ~5% margin */
 unsigned int sched_capacity_margin_up_boosted[CPU_NR] = {
-	1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280
+	1205, 1205, 1205, 1205, 1205, 1205, 1205, 1205
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 unsigned int sched_capacity_margin_down_boosted[CPU_NR] = {
 	//4096, 4096, 4096, 4096, 4096, 4096, 1280, 1280
@@ -7438,10 +7438,15 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 	if (capacity == max_capacity)
 		return true;
 
-	if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
+	/*if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
 			schedtune_task_boost(p) > 0) &&
 			is_min_capacity_cpu(cpu))
+		return false;*/
+
+	if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG) &&
+			is_min_capacity_cpu(cpu))
 		return false;
+
 
 	return task_fits_capacity(p, capacity, cpu);
 }
