@@ -4154,9 +4154,9 @@ static int clk_add_and_print_opp(struct clk_hw *hw,
 		rrate = clk_hw_round_rate(hw, INT_MAX);
 		clk_prepare_unlock();
 
-		if (n == 0 || n == core->num_rate_max - 1 || rate == rrate)
-			pr_info("%s: set OPP pair(%lu Hz: %u uV) on %s\n",
-						core->name, rate, uv,
+		//if (n == 0 || n == core->num_rate_max - 1 || rate == rrate)
+			pr_info("%s: set OPP pair(%lu (%lu) Hz: %u uV) on %s\n",
+						core->name, rate, rrate, uv,
 						dev_name(device_list[j]));
 	}
 	return ret;
