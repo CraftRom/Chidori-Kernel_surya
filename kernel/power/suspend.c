@@ -606,6 +606,28 @@ static int enter_state(suspend_state_t state)
 	return error;
 }
 
+static struct timespec ts_start;
+static struct timespec ts_end;
+static void pm_suspend_stats(bool start)
+{
+	long sec_int, nsec_int, elapsed;
+
+	if( start ) {
+	    getnstimeofday(&ts_start);
+    	sec_int = (long)ts_start.tv_sec - (long)ts_end.tv_sec;
+    	nsec_int = (long)ts_start.tv_nsec - (long)ts_end.tv_nsec;
+    	elapsed = (sec_int*1000) + (nsec_int/1000000);
+		pr_info("PM: elapsed %ld msec active\n",elapsed);
+		return;
+	} else {
+    	getnstimeofday(&ts_end);
+    	sec_int = (long)ts_end.tv_sec - (long)ts_start.tv_sec;
+    	nsec_int = (long)ts_end.tv_nsec - (long)ts_start.tv_nsec;
+    	elapsed = (sec_int*1000) + (nsec_int/1000000);
+    	pr_info("PM: elapsed %ld msec suspend\n",elapsed);
+    }
+}
+
 static void pm_suspend_marker(char *annotation)
 {
 	struct timespec ts;
@@ -634,6 +656,7 @@ int pm_suspend(suspend_state_t state)
 
 	pm_suspend_marker("entry");
 	pr_info("suspend entry (%s)\n", mem_sleep_labels[state]);
+    pm_suspend_stats(true);
 	error = enter_state(state);
 	if (error) {
 		suspend_stats.fail++;
@@ -641,6 +664,7 @@ int pm_suspend(suspend_state_t state)
 	} else {
 		suspend_stats.success++;
 	}
+    pm_suspend_stats(false);
 	pm_suspend_marker("exit");
 	pr_info("suspend exit\n");
 	measure_wake_up_time();
