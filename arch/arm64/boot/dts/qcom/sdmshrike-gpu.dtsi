@@ -89,7 +89,7 @@
 		qcom,gpu-quirk-cx-gdsc;
 
 		qcom,idle-timeout = <80>; /* msecs */
-		qcom,no-nap;
+		/*qcom,no-nap;*/
 
 		qcom,highest-bank-bit = <16>;
 
