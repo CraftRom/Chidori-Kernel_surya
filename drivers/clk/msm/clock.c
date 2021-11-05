@@ -1172,7 +1172,7 @@ static int add_and_print_opp(struct clk *clk, struct device **device_list,
 						clk->dbg_name, rate, ret);
 			return ret;
 		}
-		if (n == 1 || n == clk->num_fmax - 1 ||
+		if (/*n == 1 || n == clk->num_fmax - 1 ||*/
 					rate == clk_round_rate(clk, INT_MAX))
 			pr_info("%s: set OPP pair(%lu Hz: %u uV) on %s\n",
 						clk->dbg_name, rate, uv,
