@@ -173,13 +173,9 @@ static unsigned int _adjust_pwrlevel(struct kgsl_pwrctrl *pwr, int level,
 {
 	unsigned int max_pwrlevel = max_t(unsigned int, pwr->thermal_pwrlevel,
 					pwr->max_pwrlevel);
-	//unsigned int min_pwrlevel = min_t(unsigned int,
-	//				pwr->thermal_pwrlevel_floor,
-	//				pwr->min_pwrlevel);
-
-	unsigned int min_pwrlevel = pwr->min_pwrlevel;
-
-    unsigned int level_orig = level;
+	unsigned int min_pwrlevel = min_t(unsigned int,
+					pwr->thermal_pwrlevel_floor,
+					pwr->min_pwrlevel);
 
 	/* Ensure that max/min pwrlevels are within thermal max/min limits */
 	max_pwrlevel = min_t(unsigned int, max_pwrlevel,
@@ -205,8 +201,6 @@ static unsigned int _adjust_pwrlevel(struct kgsl_pwrctrl *pwr, int level,
 		return max_pwrlevel;
 	if (level > min_pwrlevel)
 		return min_pwrlevel;
-
-    //pr_info("level %d %d", level, level_orig);
 
 	return level;
 }
@@ -418,11 +412,8 @@ void kgsl_pwrctrl_pwrlevel_change(struct kgsl_device *device,
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 	struct kgsl_pwrlevel *pwrlevel;
 	unsigned int old_level = pwr->active_pwrlevel;
-    int new_level_orig = new_level;
 
 	new_level = kgsl_pwrctrl_adjust_pwrlevel(device, new_level);
-
-    //pr_info("kgsl_pwrctrl_adjust_pwrlevel: %d %d", new_level, new_level_orig);
 
 	/*
 	 * If thermal cycling is required and the new level hits the
@@ -631,8 +622,8 @@ static ssize_t kgsl_pwrctrl_thermal_pwrlevel_store(struct device *dev,
 
 	mutex_lock(&device->mutex);
 
-	if (level > pwr->num_pwrlevels - 1)
-		level = pwr->num_pwrlevels - 1;
+	if (level > pwr->num_pwrlevels - 2)
+		level = pwr->num_pwrlevels - 2;
 
 	pwr->thermal_pwrlevel = level;
 
@@ -710,8 +701,8 @@ static void kgsl_pwrctrl_min_pwrlevel_set(struct kgsl_device *device,
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 
 	mutex_lock(&device->mutex);
-	if (level > pwr->num_pwrlevels - 1)
-		level = pwr->num_pwrlevels - 1;
+	if (level > pwr->num_pwrlevels - 2)
+		level = pwr->num_pwrlevels - 2;
 
 	/* You can't set a minimum power level lower than the maximum */
 	if (level < pwr->max_pwrlevel)
@@ -778,7 +769,7 @@ static int _get_nearest_pwrlevel(struct kgsl_pwrctrl *pwr, unsigned int clock)
 {
 	int i;
 
-	for (i = pwr->num_pwrlevels - 1; i >= 0; i--) {
+	for (i = pwr->num_pwrlevels - 2; i >= 0; i--) {
 		if (abs(pwr->pwrlevels[i].gpu_freq - clock) < 5000000)
 			return i;
 	}
@@ -1045,7 +1036,7 @@ static ssize_t kgsl_pwrctrl_gpu_available_frequencies_show(
 	if (device == NULL)
 		return 0;
 	pwr = &device->pwrctrl;
-	for (index = 0; index < pwr->num_pwrlevels/* - 1*/; index++) {
+	for (index = 0; index < pwr->num_pwrlevels - 1; index++) {
 		num_chars += scnprintf(buf + num_chars,
 			PAGE_SIZE - num_chars - 1,
 			"%d ", pwr->pwrlevels[index].gpu_freq);
@@ -1072,7 +1063,7 @@ static ssize_t kgsl_pwrctrl_gpu_clock_stats_show(
 	mutex_lock(&device->mutex);
 	kgsl_pwrscale_update_stats(device);
 	mutex_unlock(&device->mutex);
-	for (index = 0; index < pwr->num_pwrlevels/* - 1*/; index++)
+	for (index = 0; index < pwr->num_pwrlevels - 1; index++)
 		num_chars += snprintf(buf + num_chars, PAGE_SIZE - num_chars,
 			"%llu ", pwr->clock_times[index]);
 
@@ -1387,7 +1378,7 @@ static ssize_t kgsl_pwrctrl_freq_table_mhz_show(
 		return 0;
 
 	pwr = &device->pwrctrl;
-	for (index = 0; index < pwr->num_pwrlevels/* - 1*/; index++) {
+	for (index = 0; index < pwr->num_pwrlevels - 1; index++) {
 		num_chars += scnprintf(buf + num_chars,
 			PAGE_SIZE - num_chars - 1,
 			"%d ", pwr->pwrlevels[index].gpu_freq / 1000000);
@@ -1675,12 +1666,12 @@ static void kgsl_pwrctrl_clk(struct kgsl_device *device, int state,
 			&pwr->power_flags)) {
 			/* High latency clock maintenance. */
 			if (device->state != KGSL_STATE_NAP) {
-				//if (pwr->pwrlevels[0].gpu_freq > 0) {
+				if (pwr->pwrlevels[0].gpu_freq > 0) {
 					kgsl_clk_set_rate(device,
 							pwr->active_pwrlevel);
 					_isense_clk_set_rate(pwr,
 						pwr->active_pwrlevel);
-				//}
+				}
 			}
 
 			for (i = KGSL_MAX_CLKS - 1; i > 0; i--)
@@ -2117,7 +2108,7 @@ static bool _gpu_freq_supported(struct kgsl_pwrctrl *pwr, unsigned int freq)
 {
 	int i;
 
-	for (i = pwr->num_pwrlevels - 1; i >= 0; i--) {
+	for (i = pwr->num_pwrlevels - 2; i >= 0; i--) {
 		if (pwr->pwrlevels[i].gpu_freq == freq)
 			return true;
 	}
