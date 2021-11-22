@@ -123,10 +123,11 @@ kernel/configs/android-*.cfg
 #
 Android.bp
 
-/out/
+/out
 /libufdt/
-/AnyKernel3/
+/AnyKernel3
 /stock_32/
 /stock/
 /clang/
+*.zip
 
