@@ -74,6 +74,7 @@ typedef uint32_t wlan_scan_id;
 #define MAX_BSS_SCORE 200
 #define MAX_INDEX_SCORE 100
 #define MAX_INDEX_PER_INI 4
+#define SAE_PK_AP_WEIGHTAGE 3
 
 #define BEST_CANDIDATE_MAX_BSS_SCORE (MAX_BSS_SCORE * 100)
 
@@ -166,6 +167,7 @@ struct element_info {
  * @rnrie: reduced neighbor report IE
  * @adaptive_11r: pointer to adaptive 11r IE
  * @single_pmk: Pointer to sae single pmk IE
+ * @rsnxe: Pointer to rsnxe IE
  */
 struct ie_list {
 	uint8_t *tim;
@@ -218,6 +220,7 @@ struct ie_list {
 	uint8_t *extender;
 	uint8_t *adaptive_11r;
 	uint8_t *single_pmk;
+	uint8_t *rsnxe;
 };
 
 enum scan_entry_connection_state {
@@ -484,6 +487,7 @@ struct scan_cache_entry {
  * @pcl_weightage: PCL weightage
  * @channel_congestion_weightage: channel congestion weightage
  * @oce_wan_weightage: OCE WAN metrics weightage
+ * @sae_pk_ap_weightage: SAE-PK AP weigtage
  */
 struct  weight_config {
 	uint8_t rssi_weightage;
@@ -497,6 +501,7 @@ struct  weight_config {
 	uint8_t pcl_weightage;
 	uint8_t channel_congestion_weightage;
 	uint8_t oce_wan_weightage;
+	uint8_t sae_pk_ap_weightage;
 };
 
 /**
