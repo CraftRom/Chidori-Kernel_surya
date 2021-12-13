@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 4
 PATCHLEVEL = 14
+<<<<<<< HEAD
 SUBLEVEL = 259
+=======
+SUBLEVEL = 257
+>>>>>>> 819ed966815c (Merge tag 'v4.14.257' of https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux into rebase3)
 EXTRAVERSION =
 NAME = Petit Gorille
 
