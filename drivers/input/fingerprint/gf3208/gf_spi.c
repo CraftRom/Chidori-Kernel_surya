@@ -473,7 +473,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			break;
 		}
 
-		gf_kernel_key_input(gf_dev, &gf_key);
+		//gf_kernel_key_input(gf_dev, &gf_key);
 		break;
 
 #if defined(SUPPORT_NAV_EVENT)
@@ -485,7 +485,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			break;
 		}
 
-		nav_event_input(gf_dev, nav_event);
+		//nav_event_input(gf_dev, nav_event);
 		break;
 #endif
 
