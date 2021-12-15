@@ -2212,14 +2212,7 @@ static inline u32 open_file_to_av(struct file *file)
 
 static int selinux_binder_set_context_mgr(const struct cred *mgr)
 {
-<<<<<<< HEAD
-	u32 mysid = current_sid();
-	u32 mgrsid = task_sid(mgr);
-
-	return avc_has_perm(current_sid(), cred_sid(mgr), SECCLASS_BINDER,
-=======
 	return avc_has_perm(&selinux_state, current_sid(), cred_sid(mgr), SECCLASS_BINDER,
->>>>>>> 227607219f68 (Merge tag 'v4.14.256' of https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux into rebase3)
 			    BINDER__SET_CONTEXT_MGR, NULL);
 }
 
@@ -2247,15 +2240,7 @@ static int selinux_binder_transaction(const struct cred *from,
 static int selinux_binder_transfer_binder(const struct cred *from,
 					  const struct cred *to)
 {
-<<<<<<< HEAD
-
-	u32 fromsid = task_sid(from);
-	u32 tosid = task_sid(to);
-
-	return avc_has_perm(cred_sid(from), cred_sid(to),
-=======
 	return avc_has_perm(&selinux_state, cred_sid(from), cred_sid(to),
->>>>>>> 227607219f68 (Merge tag 'v4.14.256' of https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux into rebase3)
 			    SECCLASS_BINDER, BINDER__TRANSFER,
 			    NULL);
 }
