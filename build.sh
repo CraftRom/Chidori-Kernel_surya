@@ -58,7 +58,7 @@ fi
 
 if [[ $1 == "-r" || $1 == "--regen" ]]; then
 cp out/.config arch/arm64/configs/$DEFCONFIG
-git commit -am "defconfig: onclite: Regenerate" --signoff
+git commit -am "defconfig: surya: Regenerate" --signoff
 echo -e "$grn \nRegened defconfig succesfully!\n $nocol"
 make mrproper
 echo -e "$grn \nCleaning was successful succesfully!\n $nocol"
@@ -68,14 +68,14 @@ fi
 
 # Build start
 echo -e "$blue    \nStarting kernel compilation...\n $nocol"
-make -j$(nproc --all) O=out ARCH=arm64 CC="ccache clang" AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- Image.gz-dtb
+make -j$(nproc --all) O=out ARCH=arm64 CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu- Image.gz-dtb
 
 
 if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
 echo -e "$blue    \nKernel compiled succesfully! Zipping up...\n $nocol"
 if ! [ -d "AnyKernel3" ]; then
 echo "AnyKernel3 not found! Cloning..."
-if ! git clone https://github.com/CraftRom/AnyKernel3 -b onclite AnyKernel3; then
+if ! git clone https://github.com/CraftRom/AnyKernel3 -b surya AnyKernel3; then
 echo "Cloning failed! Aborting..."
 fi
 fi
