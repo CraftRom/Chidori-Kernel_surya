@@ -664,8 +664,8 @@ int pm_suspend(suspend_state_t state)
 	} else {
 		suspend_stats.success++;
 	}
-    pm_suspend_stats(false);
 	pm_suspend_marker("exit");
+    pm_suspend_stats(false);
 	pr_info("suspend exit\n");
 	measure_wake_up_time();
 	return error;
