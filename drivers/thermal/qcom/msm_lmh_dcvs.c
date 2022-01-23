@@ -221,8 +221,8 @@ static void limits_dcvs_poll(struct work_struct *work)
 		hw->is_irq_enabled = true;
 		enable_irq(hw->irq_num);
 	} else {
-		mod_delayed_work(system_highpri_wq, &hw->freq_poll_work,
-			 msecs_to_jiffies(LIMITS_POLLING_DELAY_MS));
+		//mod_delayed_work(system_highpri_wq, &hw->freq_poll_work,
+		//	 msecs_to_jiffies(LIMITS_POLLING_DELAY_MS));
 	}
 	mutex_unlock(&hw->access_lock);
 }
