@@ -150,7 +150,7 @@ static inline void __oom_reap_task_mm(struct mm_struct *mm)
 
 static inline unsigned long oom_badness(struct task_struct *p,
 		struct mem_cgroup *memcg, const nodemask_t *nodemask,
-		unsigned long totalpages)
+		unsigned long totalpages, bool only_positive_adj)
 {
 	return 0;
 }
