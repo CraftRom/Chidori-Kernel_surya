@@ -65,6 +65,25 @@ static unsigned long get_total_mm_pages(struct mm_struct *mm)
 	return pages;
 }
 
+struct task_struct *lmk_find_lock_task_mm(struct task_struct *p)
+{
+	struct task_struct *t;
+
+	rcu_read_lock();
+
+	for_each_thread(p, t) {
+		task_lock(t);
+		if (likely(t->mm))
+			goto found;
+		task_unlock(t);
+	}
+	t = NULL;
+found:
+	rcu_read_unlock();
+
+	return t;
+}
+
 static unsigned long find_victims(int *vindex)
 {
 	short i, min_adj = SHRT_MAX, max_adj = 0;
@@ -86,10 +105,17 @@ static unsigned long find_victims(int *vindex)
 		 */
 		sig = tsk->signal;
 		adj = READ_ONCE(sig->oom_score_adj);
-		if ( (adj != 0 && adj != -100 && adj < 400) ||
+
+
+        if( adj == 0 ) adj = 1;
+        else if ( adj == -100 ) adj = 0;
+        else if ( adj < 700 ) adj = -1;
+
+		if ( adj < 0 ||
 		    sig->flags & (SIGNAL_GROUP_EXIT | SIGNAL_GROUP_COREDUMP) ||
-		    (thread_group_empty(tsk) && tsk->flags & PF_EXITING))
-			continue;
+		    (thread_group_empty(tsk) && tsk->flags & PF_EXITING)) {
+        	continue;
+        }
 
 		/* Store the task in a linked-list bucket based on its adj */
 		tsk->simple_lmk_next = task_bucket[adj];
@@ -100,6 +126,8 @@ static unsigned long find_victims(int *vindex)
 			max_adj = adj;
 		if (adj < min_adj)
 			min_adj = adj;
+
+
 	}
 
 	/* Start searching for victims from the highest adj (least important) */
@@ -118,9 +146,10 @@ static unsigned long find_victims(int *vindex)
 		do {
 			struct task_struct *vtsk;
 
-			vtsk = find_lock_task_mm(tsk);
-			if (!vtsk)
+			vtsk = lmk_find_lock_task_mm(tsk);
+			if (!vtsk) {
 				continue;
+            }
 
 			/* Store this potential victim away for later */
 			victims[*vindex].tsk = vtsk;
@@ -193,7 +222,7 @@ static void scan_and_kill(void)
 	/* Populate the victims array with tasks sorted by adj and then size */
 	pages_found = find_victims(&nr_found);
 	if (unlikely(!nr_found)) {
-		pr_err("No processes available to kill!\n");
+		pr_err("No processes available to kill %ld, %d!\n", pages_found, nr_found);
 		return;
 	}
 
@@ -307,7 +336,7 @@ void simple_lmk_mm_freed(struct mm_struct *mm)
 static int simple_lmk_vmpressure_cb(struct notifier_block *nb,
 				    unsigned long pressure, void *data)
 {
-	if (pressure == 100 && !atomic_cmpxchg_acquire(&needs_reclaim, 0, 1))
+	if (pressure >= 100 && !atomic_cmpxchg_acquire(&needs_reclaim, 0, 1))
 		wake_up(&oom_waitq);
 
 	return NOTIFY_OK;
