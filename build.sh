@@ -79,7 +79,7 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 echo -e "$blue    \nKernel compiled succesfully! Zipping up...\n $nocol"
 if ! [ -d "AnyKernel3" ]; then
 echo "AnyKernel3 not found! Cloning..."
-if ! git clone https://github.com/CraftRom/AnyKernel3 -b onclite AnyKernel3; then
+if ! git clone https://github.com/CraftRom/AnyKernel3 -b surya AnyKernel3; then
 echo "Cloning failed! Aborting..."
 fi
 fi
