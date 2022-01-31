@@ -27,7 +27,7 @@ TC_DIR="$HOME/toolchains/proton-clang"
 DEFCONFIG="vendor/surya-perf_defconfig"
 
 export PATH="$TC_DIR/bin:$PATH"
-export KBUILD_BUILD_USER=melles1991
+export KBUILD_BUILD_USER=melles1991••Igoryan94
 export KBUILD_BUILD_HOST=CraftRom-build
 
 echo -e "${txtbld}Config:${txtrst} $DEFCONFIG"
@@ -92,6 +92,30 @@ cd ..
 echo -e "$grn \n(i)          Completed build$nocol $red$((SECONDS / 60))$nocol $grn minute(s) and$nocol $red$((SECONDS % 60))$nocol $grn second(s) !$nocol"
 echo -e "$blue    \n             Flashable zip generated $yellow$ZIPNAME.\n $nocol"
 rm -rf out/arch/arm64/boot
+
+if [[ $1 == "-t" || $1 == "--telegram" ]]; then
+#Push to DataRepository
+echo -e "$blue \nSend to DATA STORAGE\n $nocol" 
+curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument" \
+-F chat_id="-1001209604560" \
+-F "parse_mode=html" \
+-F caption="$(echo -e "======= <b>Poxo X3</b> =======\n
+New update available\n<b>Date:</b> $(date '+%d.%m.%Y  %H:%M')\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n\n#surya #karna #kernel")" \
+-F chat_id="-1001209604560" \
+-F "disable_web_page_preview=true"
+
+#Push to CraftRom 
+echo -e "$blue \n\nSend to Craft rom\n $nocol"
+curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument" \
+-F chat_id="-1001452770277" \
+-F "parse_mode=html" \
+-F caption="$(echo -e "======= <b>Poco X3</b> =======\n
+New update available\n<b>Date:</b> $(date '+%d.%m.%Y  %H:%M')\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n\n#surya #karna #kernel")" \
+-F chat_id="-1001209604560" \
+-F "disable_web_page_preview=true"
+echo -e "$grn \n\n(i)          Send to telegram succesfully!\n $nocol"
+fi
+
 else
  echo -e "$red \nKernel Compilation failed! Fix the errors!\n $nocol"
 fi
