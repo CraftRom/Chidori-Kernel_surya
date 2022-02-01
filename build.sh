@@ -22,17 +22,35 @@ echo -e "░▐█──░▐████─░█▌░▐█▌▐█▒▐�
 echo -e "░▐█▄█░▐█░▐█░▐██░▐█▄█▀▒▐██▄█▌▒▐█▀▄▄░▐██$nocol"
 echo -e " "
 
-ZIPNAME="Chidori-Kernel-surya-$(date '+%Y%m%d-%H%M').zip"
+KERN_VER=$(echo "$(make kernelversion)")
+BUILD_DATE=$(date '+%Y-%m-%d  %H:%M')
+DEVICE="Redmi7/Y3"
+if [[ $1 == "-n" || $1 == "--night" ]]; then
+TYPE="nightly"
+else
+if [[ $1 == "-s" || $1 == "--stable" ]]; then
+TYPE="stable"
+else
+TYPE="experimental"
+fi
+fi
+KERNELNAME="Chidori-Kernel-$TYPE"
+ZIPNAME="Chidori-Kernel-surya-$(date '+%Y%m%d%H%M')-$TYPE.zip"
 TC_DIR="$HOME/toolchains/proton-clang"
 DEFCONFIG="vendor/surya-perf_defconfig"
+sed -i "51s/.*/CONFIG_LOCALVERSION=\"-${KERNELNAME}\"/g" arch/arm64/configs/$DEFCONFIG
 
 export PATH="$TC_DIR/bin:$PATH"
 export KBUILD_BUILD_USER=melles1991••Igoryan94
 export KBUILD_BUILD_HOST=CraftRom-build
 
+echo -e "${txtbld}Type:${txtrst} $TYPE"
 echo -e "${txtbld}Config:${txtrst} $DEFCONFIG"
 echo -e "${txtbld}ARCH:${txtrst} arm64"
+echo -e "${txtbld}Linux:${txtrst} $KERN_VER"
 echo -e "${txtbld}Username:${txtrst} $KBUILD_BUILD_USER"
+echo -e "${txtbld}BuildDate:${txtrst} $BUILD_DATE"
+echo -e "${txtbld}Filename::${txtrst} $ZIPNAME"
 echo -e " "
 
 if ! [ -d "$TC_DIR" ]; then
@@ -92,6 +110,8 @@ cd ..
 echo -e "$grn \n(i)          Completed build$nocol $red$((SECONDS / 60))$nocol $grn minute(s) and$nocol $red$((SECONDS % 60))$nocol $grn second(s) !$nocol"
 echo -e "$blue    \n             Flashable zip generated $yellow$ZIPNAME.\n $nocol"
 rm -rf out/arch/arm64/boot
+# TEMP
+git hard --reset
 
 if [[ $1 == "-t" || $1 == "--telegram" ]]; then
 #Push to DataRepository
@@ -100,7 +120,7 @@ curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtP
 -F chat_id="-1001209604560" \
 -F "parse_mode=html" \
 -F caption="$(echo -e "======= <b>Poxo X3</b> =======\n
-New update available\n<b>Date:</b> $(date '+%d.%m.%Y  %H:%M')\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n\n#surya #karna #kernel")" \
+New update available!\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n<b>Linux:</b> $KERN_VER\n<b>Type:</b> $TYPE\n<b>BuildDate:</b> $BUILD_DATE\n<b>Filename:</b> $ZIPNAME\n\n#surya #karna #kernel")" \
 -F chat_id="-1001209604560" \
 -F "disable_web_page_preview=true"
 
@@ -109,8 +129,8 @@ echo -e "$blue \n\nSend to Craft rom\n $nocol"
 curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument" \
 -F chat_id="-1001452770277" \
 -F "parse_mode=html" \
--F caption="$(echo -e "======= <b>Poco X3</b> =======\n
-New update available\n<b>Date:</b> $(date '+%d.%m.%Y  %H:%M')\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n\n#surya #karna #kernel")" \
+-F caption="$(echo -e "======= <b>$DEVICE</b> =======\n
+New update available!\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n<b>Linux:</b> $KERN_VER\n<b>Type:</b> $TYPE\n<b>BuildDate:</b> $BUILD_DATE\n<b>Filename:</b> $ZIPNAME\n\n#surya #karna #kernel")" \
 -F chat_id="-1001209604560" \
 -F "disable_web_page_preview=true"
 echo -e "$grn \n\n(i)          Send to telegram succesfully!\n $nocol"
