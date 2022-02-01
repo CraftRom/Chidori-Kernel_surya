@@ -24,7 +24,7 @@ echo -e " "
 
 KERN_VER=$(echo "$(make kernelversion)")
 BUILD_DATE=$(date '+%Y-%m-%d  %H:%M')
-DEVICE="Redmi7/Y3"
+DEVICE="POCO X3 NFC"
 if [[ $1 == "-n" || $1 == "--night" ]]; then
 TYPE="nightly"
 else
@@ -111,7 +111,7 @@ echo -e "$grn \n(i)          Completed build$nocol $red$((SECONDS / 60))$nocol $
 echo -e "$blue    \n             Flashable zip generated $yellow$ZIPNAME.\n $nocol"
 rm -rf out/arch/arm64/boot
 # TEMP
-git hard --reset
+git reset --hard HEAD
 
 if [[ $1 == "-t" || $1 == "--telegram" ]]; then
 #Push to DataRepository
@@ -119,7 +119,7 @@ echo -e "$blue \nSend to DATA STORAGE\n $nocol"
 curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument" \
 -F chat_id="-1001209604560" \
 -F "parse_mode=html" \
--F caption="$(echo -e "======= <b>Poxo X3</b> =======\n
+-F caption="$(echo -e "======= <b>$DEVICE</b> =======\n
 New update available!\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n<b>Linux:</b> $KERN_VER\n<b>Type:</b> $TYPE\n<b>BuildDate:</b> $BUILD_DATE\n<b>Filename:</b> $ZIPNAME\n\n#surya #karna #kernel")" \
 -F chat_id="-1001209604560" \
 -F "disable_web_page_preview=true"
