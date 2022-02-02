@@ -41,7 +41,7 @@ DEFCONFIG="vendor/surya-perf_defconfig"
 sed -i "51s/.*/CONFIG_LOCALVERSION=\"-${KERNELNAME}\"/g" arch/arm64/configs/$DEFCONFIG
 
 export PATH="$TC_DIR/bin:$PATH"
-export KBUILD_BUILD_USER=melles1991••Igoryan94
+export KBUILD_BUILD_USER="melles1991 • Igoryan94"
 export KBUILD_BUILD_HOST=CraftRom-build
 
 echo -e "${txtbld}Type:${txtrst} $TYPE"
@@ -54,17 +54,14 @@ echo -e "${txtbld}Filename::${txtrst} $ZIPNAME"
 echo -e " "
 
 if ! [ -d "$TC_DIR" ]; then
-echo "Proton clang not found! Cloning to $TC_DIR..."
+echo -e "$grn \nProton clang not found! Cloning to $TC_DIR...\n $nocol"
 if ! git clone -q --depth=1 --single-branch https://github.com/kdrag0n/proton-clang $TC_DIR; then
-echo "Cloning failed! Aborting..."
+echo -e "$red \nCloning failed! Aborting...\n $nocol"
 exit 1
 fi
 fi
 
-echo -e "$blue    \nMake DefConfig\n $nocol"
-mkdir -p out
-make O=out ARCH=arm64 $DEFCONFIG
-
+# Clean 
 if [[ $1 == "-c" || $1 == "--clean" ]]; then
 if [  -d "./out/" ]; then
 echo -e " "
@@ -73,6 +70,31 @@ fi
 echo -e "$grn \nFull cleaning was successful succesfully!\n $nocol"
 sleep 2
 fi
+
+# Telegram setup
+push_message() {
+    curl -s -X POST \
+        https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendMessage \
+        -d chat_id="-1001452770277" \
+        -d text="$1" \
+        -d "parse_mode=html" \
+        -d "disable_web_page_preview=true"
+}
+
+push_document() {
+    curl -s -X POST \
+        https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument \
+        -F chat_id="-1001452770277" \
+        -F document=@"$1" \
+        -F caption="$2" \
+        -F "parse_mode=html" \
+        -F "disable_web_page_preview=true"
+}
+
+# Export defconfig
+echo -e "$blue    \nMake DefConfig\n $nocol"
+mkdir -p out
+make O=out ARCH=arm64 $DEFCONFIG
 
 if [[ $1 == "-r" || $1 == "--regen" ]]; then
 cp out/.config arch/arm64/configs/$DEFCONFIG
@@ -96,9 +118,9 @@ dtbo="out/arch/arm64/boot/dtbo.img"
 if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 echo -e "$blue    \nKernel compiled succesfully! Zipping up...\n $nocol"
 if ! [ -d "AnyKernel3" ]; then
-echo "AnyKernel3 not found! Cloning..."
+echo -e "$grn \nAnyKernel3 not found! Cloning...\n $nocol"
 if ! git clone https://github.com/CraftRom/AnyKernel3 -b surya AnyKernel3; then
-echo "Cloning failed! Aborting..."
+echo -e "$grn \nCloning failed! Aborting...\n $nocol"
 fi
 fi
 cp $kernel $dtbo AnyKernel3
@@ -110,32 +132,31 @@ cd ..
 echo -e "$grn \n(i)          Completed build$nocol $red$((SECONDS / 60))$nocol $grn minute(s) and$nocol $red$((SECONDS % 60))$nocol $grn second(s) !$nocol"
 echo -e "$blue    \n             Flashable zip generated $yellow$ZIPNAME.\n $nocol"
 rm -rf out/arch/arm64/boot
-# TEMP
-git reset --hard HEAD
 
-if [[ $1 == "-t" || $1 == "--telegram" ]]; then
-#Push to DataRepository
-echo -e "$blue \nSend to DATA STORAGE\n $nocol" 
-curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument" \
--F chat_id="-1001209604560" \
--F "parse_mode=html" \
--F caption="$(echo -e "======= <b>$DEVICE</b> =======\n
-New update available!\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n<b>Linux:</b> $KERN_VER\n<b>Type:</b> $TYPE\n<b>BuildDate:</b> $BUILD_DATE\n<b>Filename:</b> $ZIPNAME\n\n#surya #karna #kernel")" \
--F chat_id="-1001209604560" \
--F "disable_web_page_preview=true"
 
-#Push to CraftRom 
-echo -e "$blue \n\nSend to Craft rom\n $nocol"
-curl -F document=@"$ZIPNAME" "https://api.telegram.org/bot1472514287:AAG9kYDURtPvQLM9RXN_zv4h79CIbRCPuPw/sendDocument" \
--F chat_id="-1001452770277" \
--F "parse_mode=html" \
--F caption="$(echo -e "======= <b>$DEVICE</b> =======\n
-New update available!\n<b>Maintainer:</b> $KBUILD_BUILD_USER\n<b>Linux:</b> $KERN_VER\n<b>Type:</b> $TYPE\n<b>BuildDate:</b> $BUILD_DATE\n<b>Filename:</b> $ZIPNAME\n\n#surya #karna #kernel")" \
--F chat_id="-1001209604560" \
--F "disable_web_page_preview=true"
+
+# Push kernel to telegram
+if [[ $1 == "-t" || $1 == "--telegram" || $2 == "-t" || $2 == "--telegram" ]]; then
+push_document "$ZIPNAME" "
+<b>CHIDORI KERNEL | $DEVICE</b>
+
+New update available!
+<b>Maintainer:</b> <code>$KBUILD_BUILD_USER</code>
+<b>Type:</b> <code>$TYPE</code>
+<b>BuildDate:</b> <code>$BUILD_DATE</code>
+<b>Filename:</b> <code>$ZIPNAME</code>
+<b>md5 checksum :</b> <code>$(md5sum "$ZIPNAME" | cut -d' ' -f1)</code>
+
+#surya #karna #kernel"
+
 echo -e "$grn \n\n(i)          Send to telegram succesfully!\n $nocol"
 fi
 
+# TEMP
+git reset --hard HEAD
 else
  echo -e "$red \nKernel Compilation failed! Fix the errors!\n $nocol"
+ # Push message if build error
+ push_message "<b>Failed building kernel for <code>$DEVICE</code> Please fix it...!</b>"
+ exit 1
 fi
