@@ -3506,7 +3506,7 @@ static int msm_geni_serial_runtime_suspend(struct device *dev)
 		enable_irq(port->wakeup_irq);
 	}
 	IPC_LOG_MSG(port->ipc_log_pwr, "%s:\n", __func__);
-	__pm_relax(&port->geni_wake);
+	//__pm_relax(&port->geni_wake);
 exit_runtime_suspend:
 	return ret;
 }
@@ -3521,8 +3521,8 @@ static int msm_geni_serial_runtime_resume(struct device *dev)
 	 * Do an unconditional relax followed by a stay awake in case the
 	 * wake source is activated by the wakeup isr.
 	 */
-	__pm_relax(&port->geni_wake);
-	__pm_stay_awake(&port->geni_wake);
+	//__pm_relax(&port->geni_wake);
+	//__pm_stay_awake(&port->geni_wake);
 	if (port->wakeup_irq > 0)
 		disable_irq(port->wakeup_irq);
 	/*
@@ -3560,7 +3560,7 @@ static int msm_geni_serial_sys_suspend(struct device *dev)
 		struct uart_state *state = uport->state;
 		struct tty_port *tty_port = &state->port;
 
-		mutex_lock(&tty_port->mutex);
+		/*mutex_lock(&tty_port->mutex);
 		if (!pm_runtime_status_suspended(dev)) {
 			dev_err(dev, "%s:Active userspace vote; ioctl_cnt %d\n",
 					__func__, port->ioctl_count);
@@ -3571,7 +3571,7 @@ static int msm_geni_serial_sys_suspend(struct device *dev)
 			return -EBUSY;
 		}
 		IPC_LOG_MSG(port->ipc_log_pwr, "%s\n", __func__);
-		mutex_unlock(&tty_port->mutex);
+		mutex_unlock(&tty_port->mutex);*/
 	}
 	return 0;
 }
