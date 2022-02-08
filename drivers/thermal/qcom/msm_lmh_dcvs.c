@@ -157,9 +157,9 @@ static unsigned long limits_mitigation_notify(struct limits_dcvs_hw *hw)
 			goto notify_exit;
 		}
 
-		pr_info("CPU:%d dcvs max value read:%lu\n",
-			cpumask_first(&hw->core_map),
-			max_limit);
+		//pr_info("CPU:%d dcvs max value read:%lu\n",
+		//	cpumask_first(&hw->core_map),
+		//	max_limit);
 		freq_val = FREQ_KHZ_TO_HZ(max_limit);
 		opp_entry = dev_pm_opp_find_freq_floor(cpu_dev, &freq_val);
 		/*
@@ -191,8 +191,8 @@ static unsigned long limits_mitigation_notify(struct limits_dcvs_hw *hw)
 		max_limit = max_cpu_limit;
 	sched_update_cpu_freq_min_max(&hw->core_map, 0, max_limit);
 	arch_set_max_thermal_scale(&hw->core_map, max_limit);
-	pr_info("CPU:%d dcvs max limit:%lu\n", cpumask_first(&hw->core_map),
-			max_limit);
+	//pr_info("CPU:%d dcvs max limit:%lu\n", cpumask_first(&hw->core_map),
+	//		max_limit);
 	trace_lmh_dcvs_freq(cpumask_first(&hw->core_map), max_limit);
 
 notify_exit:
@@ -222,8 +222,8 @@ static void limits_dcvs_poll(struct work_struct *work)
 		hw->is_irq_enabled = true;
 		enable_irq(hw->irq_num);
 	} else {
-		//mod_delayed_work(system_highpri_wq, &hw->freq_poll_work,
-		//	 msecs_to_jiffies(LIMITS_POLLING_DELAY_MS));
+		mod_delayed_work(system_highpri_wq, &hw->freq_poll_work,
+			 msecs_to_jiffies(LIMITS_POLLING_DELAY_MS));
 	}
 	mutex_unlock(&hw->access_lock);
 }
@@ -397,6 +397,9 @@ static int lmh_set_max_limit(int cpu, u32 freq)
 	struct limits_dcvs_hw *hw = get_dcvsh_hw_from_cpu(cpu);
 	int ret = 0, cpu_idx, idx = 0;
 	u32 max_freq = U32_MAX;
+
+	pr_err("dcvs: lmh_set_max_limit %d\n", freq);
+    //dump_stack();
 
 	if (!hw)
 		return -EINVAL;
