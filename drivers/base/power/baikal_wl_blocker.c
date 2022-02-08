@@ -39,6 +39,8 @@ module_param(active, bool, 0664);
 
 const char *ws_list_eq[] = {
     "hal_bluetooth_lock",
+    "NETLINK",
+    "DIAG_WS",
     NULL
 };
 
