@@ -2,7 +2,7 @@
 #
 # Compile script for LOS kernel
 # Copyright (C) 2020-2021 Adithya R & @johnmart19.
-# Copyright (C) 2021 Craft Rom (melles1991).
+# Copyright (C) 2021-2022 Craft Rom.
 
 SECONDS=0 # builtin bash timer
 
@@ -26,12 +26,14 @@ echo -e " "
 clean=false
 regen=false
 send_tg=false
+help=false
 
 for arg in "$@"; do
 	case $arg in
 		-c|--clean)clean=true; shift;;
 		-r|--regen*)regen=true; shift;;
 		-t|--teleg*)send_tg=true; shift;;
+		-h|--help*)help=true; shift;;
 		-d|--desc*)
 			shift
 			case $1 in
@@ -83,6 +85,21 @@ if ! [ -d "$TC_DIR" ]; then
 	fi
 fi
 
+# Help information 
+if $help; then
+		echo -e "Usage: ./build.sh [-c || --clean] [-d <args> || --desc <args>]\n
+                  [-h || --help] [-r || --regen] [-t || --telegram]
+\n\n
+These are common commands used in various situations:\n\n
+$grn -c or --clean     $nocol Remove files in out folder for clean build \n
+$grn -d or --desc      $nocol Adds a description for build. \n
+                    Used with the <args> argument that contains the description \n
+$grn -h or --help      $nocol List available subcommands. \n
+$grn -r or --regen     $nocol Record changes to the defconfigs. \n
+$grn -r or --regen     $nocol Sending the archive to telegram. \n"
+	exit 0
+fi
+
 # Clean 
 if $clean; then
 	if [  -d "./out/" ]; then
@@ -91,6 +108,7 @@ if $clean; then
 	fi
 	echo -e "$grn \nFull cleaning was successful succesfully!\n $nocol"
 	sleep 2
+	exit 0
 fi
 
 # Telegram setup
@@ -126,7 +144,7 @@ if $regen; then
 	make mrproper
 	echo -e "$grn \nCleaning was successful succesfully!\n $nocol"
 	sleep 4
-	exit 1
+	exit 0
 fi
 
 # Build start
@@ -165,7 +183,9 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 		<b>CHIDORI KERNEL | $DEVICE</b>
 
 		New update available!
-		<b>Description:</b> <i>${DESC:-No description given...}</i>
+		
+		<i>${DESC:-No description given...}</i>
+		
 		<b>Maintainer:</b> <code>$KBUILD_BUILD_USER</code>
 		<b>Type:</b> <code>$TYPE</code>
 		<b>BuildDate:</b> <code>$BUILD_DATE</code>
