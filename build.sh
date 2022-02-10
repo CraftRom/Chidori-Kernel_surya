@@ -92,11 +92,11 @@ if $help; then
 \n\n
 These are common commands used in various situations:\n\n
 $grn -c or --clean     $nocol Remove files in out folder for clean build \n
-$grn -d or --desc      $nocol Adds a description for build. \n
+$grn -d or --description      $nocol Adds a description for build. \n
                     Used with the <args> argument that contains the description \n
 $grn -h or --help      $nocol List available subcommands. \n
-$grn -r or --regen     $nocol Record changes to the defconfigs. \n
-$grn -r or --regen     $nocol Sending the archive to telegram. \n"
+$grn -r or --regenerate     $nocol Record changes to the defconfigs. \n
+$grn -t or --telegram     $nocol Sending the archive to telegram. \n"
 	exit 0
 fi
 
