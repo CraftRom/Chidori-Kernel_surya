@@ -30,9 +30,9 @@ send_tg=false
 for arg in "$@"; do
 	case $arg in
 		-c|--clean)clean=true; shift;;
-		-r|--regen)regen=true; shift;;
-		-t|--telegram)send_tg=true; shift;;
-		-d|--description)
+		-r|--regen*)regen=true; shift;;
+		-t|--teleg*)send_tg=true; shift;;
+		-d|--desc*)
 			shift
 			case $1 in
 				-*);;
@@ -45,6 +45,7 @@ for arg in "$@"; do
 
 		-n|--night*)TYPE=nightly; shift;;
 		-s|--stab*)TYPE=stable; shift;;
+		-e|--exp*)TYPE=experimental; shift;;
 	esac
 done
 case $TYPE in nightly|stable);; *)TYPE=experimental;; esac
