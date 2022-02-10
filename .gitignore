@@ -123,6 +123,10 @@ kernel/configs/android-*.cfg
 #
 Android.bp
 
+# Output kernel packages
+*.zip
+
+# Others..
 /out/
 /libufdt/
 /AnyKernel3/
