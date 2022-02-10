@@ -1223,7 +1223,7 @@ static int cluster_init(const struct cpumask *mask)
 	unsigned int first_cpu = cpumask_first(mask);
 	struct cluster_data *cluster;
 	struct cpu_data *state;
-	unsigned int cpu;
+	unsigned int cpu, i;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
 
 	if (find_cluster_by_first_cpu(first_cpu))
@@ -1252,7 +1252,7 @@ static int cluster_init(const struct cpumask *mask)
 	cluster->first_cpu = first_cpu;
 	cluster->min_cpus = 1;
 	cluster->max_cpus = cluster->num_cpus;
-	cluster->need_cpus = cluster->num_cpus;
+	cluster->need_cpus = 1;
 	cluster->offline_delay_ms = 100;
 	cluster->task_thres = UINT_MAX;
 	cluster->nr_prev_assist_thresh = UINT_MAX;
@@ -1272,6 +1272,11 @@ static int cluster_init(const struct cpumask *mask)
 	}
 	cluster->active_cpus = get_active_cpu_count(cluster);
 
+	for (i = 0; i < cluster->num_cpus; i++)
+		cluster->busy_up_thres[i] = 80;
+	for (i = 0; i < cluster->num_cpus; i++)
+		cluster->busy_down_thres[i] = 20;
+
 	cluster->core_ctl_thread = kthread_run(try_core_ctl, (void *) cluster,
 					"core_ctl/%d", first_cpu);
 	if (IS_ERR(cluster->core_ctl_thread))
@@ -1287,7 +1292,7 @@ static int cluster_init(const struct cpumask *mask)
 }
 
 #endif
-#if 1
+
 static int __init core_ctl_init(void)
 {
 	struct sched_cluster *cluster;
@@ -1312,4 +1317,4 @@ static int __init core_ctl_init(void)
 }
 
 late_initcall(core_ctl_init);
-#endif
+
