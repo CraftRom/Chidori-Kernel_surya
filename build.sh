@@ -176,7 +176,7 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 	fi
 
 	# TEMP
-	git reset --hard HEAD
+	sed -i "51s/-experimental//" arch/arm64/configs/$DEFCONFIG
 else
 	echo -e "$red \nKernel Compilation failed! Fix the errors!\n $nocol"
 	# Push message if build error
