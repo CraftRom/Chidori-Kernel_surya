@@ -87,16 +87,20 @@ fi
 
 # Help information 
 if $help; then
-		echo -e "Usage: ./build.sh [-c || --clean] [-d <args> || --desc <args>]\n
-                  [-h || --help] [-r || --regen] [-t || --telegram]
-\n\n
-These are common commands used in various situations:\n\n
-$grn -c or --clean     $nocol Remove files in out folder for clean build \n
-$grn -d or --description      $nocol Adds a description for build. \n
-                    Used with the <args> argument that contains the description \n
-$grn -h or --help      $nocol List available subcommands. \n
-$grn -r or --regenerate     $nocol Record changes to the defconfigs. \n
-$grn -t or --telegram     $nocol Sending the archive to telegram. \n"
+	echo -e "Usage: ./build.sh [ -c | --clean, -d <args> | --desc <args>,
+                  -h | --help, -r | --regen, -t | --telegram ]\n
+These are common commands used in various situations:\n
+$grn -c or --clean			$nocol Remove files in out folder for clean build
+$grn -d or --description		$nocol Adds a description for build.
+				 Used with the <args> argument that contains the description
+$grn -h or --help			$nocol List available subcommands.
+$grn -r or --regenerate		$nocol Record changes to the defconfigs.
+$grn -t or --telegram		$nocol Sending the archive to telegram. \n
+Build type names:
+$grn -s or --stable			$nocol Stable build
+$grn -n or --nightly		$nocol Nightly build
+$grn -s or --experimental		$nocol Experimental build\n"
+
 	exit 0
 fi
 
