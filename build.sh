@@ -32,12 +32,12 @@ for arg in "$@"; do
 		-c|--clean)clean=true; shift;;
 		-r|--regen)regen=true; shift;;
 		-t|--telegram)send_tg=true; shift;;
-		-C|--comment)
+		-d|--description)
 			shift
 			case $1 in
 				-*);;
 				*)
-					COMMENT="New update available! Comments: $1"
+					DESC="$1"
 					shift
 					;;
 			esac
@@ -50,7 +50,7 @@ done
 case $TYPE in nightly|stable);; *)TYPE=experimental;; esac
 
 # debug:
-#echo "`date`: $clean $regen $send_tg $TYPE $COMMENT" >>build.sh.log
+#echo "`date`: $clean $regen $send_tg $TYPE $DESC" >>build.sh.log
 
 KERN_VER=$(echo "$(make kernelversion)")
 BUILD_DATE=$(date '+%Y-%m-%d  %H:%M')
@@ -163,7 +163,8 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 		push_document "$ZIPNAME" "
 		<b>CHIDORI KERNEL | $DEVICE</b>
 
-		${COMMENT:-New update available!}
+		New update available!
+		<b>Description:</b> <i>${DESC:-No description given...}</i>
 		<b>Maintainer:</b> <code>$KBUILD_BUILD_USER</code>
 		<b>Type:</b> <code>$TYPE</code>
 		<b>BuildDate:</b> <code>$BUILD_DATE</code>
