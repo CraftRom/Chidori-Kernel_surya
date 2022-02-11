@@ -26,6 +26,7 @@ echo -e " "
 clean=false
 regen=false
 do_not_send_to_tg=false
+repack=false
 help=false
 
 # cmdline check flags
@@ -36,6 +37,7 @@ for arg in "$@"; do
 		-c|--clean)clean=true; shift;;
 		-r|--regen*)regen=true; shift;;
 		-l|--local*)do_not_send_to_tg=true; shift;;
+		-P|--repack)repack=true; shift;;
 		-h|--help*)help=true; shift;;
 		-d|--desc*)
 			shift
@@ -100,7 +102,8 @@ fi
 # Help information 
 if $help; then
 	echo -e "Usage: ./build.sh [ -c | --clean, -d <args> | --desc <args>,
-                  -h | --help, -r | --regen, -l | --local-build ]\n
+                  -h | --help, -r | --regen, -l | --local-build,
+		  -P | --repack ]\n
 These are common commands used in various situations:\n
 $grn -c or --clean			$nocol Remove files in out folder for clean build.
 $grn -d or --description		$nocol Adds a description for build;
@@ -109,6 +112,7 @@ $grn -d or --description		$nocol Adds a description for build;
 $grn -h or --help			$nocol List available subcommands.
 $grn -r or --regenerate		$nocol Record changes to the defconfigs.
 $grn -l or --local-build		$nocol Build locally, do not push the archive to Telegram. \n
+$grn -P or --repack		$nocol Skip build, just pack to installer and push (if flag -l not set). \n
 Build type names:
 $grn -s or --stable			$nocol Stable build
 $grn -n or --nightly		$nocol Nightly build
@@ -178,16 +182,22 @@ if ! $description_was_specified; then
 fi
 
 # Build start
-echo -e "$blue    \nStarting kernel compilation...\n $nocol"
-make -j$(nproc --all) O=out ARCH=arm64 CC="ccache clang" LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu- Image.gz dtbo.img
+if ! $repack; then
+	echo -e "$blue    \nStarting kernel compilation...\n $nocol"
+	make -j$(nproc --all) O=out ARCH=arm64 CC="ccache clang" LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu- Image.gz dtbo.img
+fi
 
 
 kernel="out/arch/arm64/boot/Image.gz"
 dtb="out/arch/arm64/boot/dts/qcom/sdmmagpie.dtb"
 dtbo="out/arch/arm64/boot/dtbo.img"
 
-if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
-	echo -e "$blue    \nKernel compiled succesfully! Zipping up...\n $nocol"
+if ([ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]) || $repack; then
+	if ! $repack; then
+		echo -e "$blue    \nKernel compiled succesfully! Zipping up...\n $nocol"
+	else
+		echo -e "$blue    \nSkipping kernel compilation, using local files. Zipping up...\n $nocol"
+	fi
 	if ! [ -d "AnyKernel3" ]; then
 		echo -e "$grn \nAnyKernel3 not found! Cloning...\n $nocol"
 		if ! git clone https://github.com/CraftRom/AnyKernel3 -b surya AnyKernel3; then
@@ -195,10 +205,20 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 		fi
 	fi
 
-	cp $kernel $dtbo AnyKernel3
-	cp $dtb AnyKernel3/dtb
+	if ! $repack; then
+		cp $kernel $dtbo AnyKernel3
+		cp $dtb AnyKernel3/dtb
+	fi
+
 	rm -f *zip
 	cd AnyKernel3
+
+	if $repack && ([ ! -f Image.gz ] || [ ! -f dtb ] || [ ! -f dtbo.img ]); then
+		echo -e "$red	\nNo compilation files detected!$nocol Cannot repack installer, exiting...\n"
+		push_message "$BUILDER! <b>Failed repacking kernel installer for <code>$DEVICE</code> Please fix it...!</b>"
+		exit 1
+	fi
+
 	zip -r9 "../$ZIPNAME" * -x '*.git*' README.md *placeholder
 	cd ..
 	echo -e "$grn \n(i)          Completed build$nocol $red$((SECONDS / 60))$nocol $grn minute(s) and$nocol $red$((SECONDS % 60))$nocol $grn second(s) !$nocol"
