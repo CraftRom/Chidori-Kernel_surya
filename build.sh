@@ -28,6 +28,9 @@ regen=false
 do_not_send_to_tg=false
 help=false
 
+# cmdline check flags
+description_was_specified=false
+
 for arg in "$@"; do
 	case $arg in
 		-c|--clean)clean=true; shift;;
@@ -39,6 +42,7 @@ for arg in "$@"; do
 			case $1 in
 				-*);;
 				*)
+					description_was_specified=true
 					DESC="$1"
 					shift
 					;;
@@ -53,7 +57,7 @@ done
 case $TYPE in nightly|stable);; *)TYPE=experimental;; esac
 
 # debug:
-#echo "`date`: $clean $regen $help $do_not_send_to_tg $TYPE $DESC" >>build.sh.log
+#echo "`date`: $clean $regen $help $do_not_send_to_tg $TYPE $DESC" >>build_sh.log
 
 KERN_VER=$(echo "$(make kernelversion)")
 BUILD_DATE=$(date '+%Y-%m-%d  %H:%M')
@@ -93,6 +97,7 @@ These are common commands used in various situations:\n
 $grn -c or --clean			$nocol Remove files in out folder for clean build.
 $grn -d or --description		$nocol Adds a description for build;
 				 Used with the <args> argument that contains the description.
+				 Build's description is an important part, so if you do not specify it manually, you will be asked about entering it.
 $grn -h or --help			$nocol List available subcommands.
 $grn -r or --regenerate		$nocol Record changes to the defconfigs.
 $grn -l or --local-build		$nocol Build locally, do not push the archive to Telegram. \n
@@ -111,7 +116,7 @@ if $clean; then
 		rm -rf ./out/
 	fi
 	echo -e "$grn \nFull cleaning was successful succesfully!\n $nocol"
-	sleep 2
+	sleep 1.5
 	exit 0
 fi
 
@@ -149,6 +154,20 @@ if $regen; then
 	echo -e "$grn \nCleaning was successful succesfully!\n $nocol"
 	sleep 4
 	exit 0
+fi
+
+# Description check
+if ! $description_was_specified; then
+	echo -en "\n\tYou did not specify the build's description! Do you want to set it?\n\t(Y/n): "
+	read ans
+	case $ans in n)echo -e "\tOK, the build will have no description...\n";;
+	*)
+		echo -en "\n\t\tType in the build's description: "
+		read DESC
+		echo -e "\n\tOK, saved!\n"
+		sleep 1.5
+		;;
+	esac
 fi
 
 # Build start
