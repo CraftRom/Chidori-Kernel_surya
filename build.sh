@@ -72,11 +72,19 @@ export PATH="$TC_DIR/bin:$PATH"
 export KBUILD_BUILD_USER="melles1991 • Igoryan94"
 export KBUILD_BUILD_HOST=CraftRom-build
 
+# Builder detection
+[ -n "$HOSTNAME" ] && NAME=$HOSTNAME
+case $NAME in
+	IgorK-*)BUILDER='@igoryan94';;
+	*)BUILDER='@mrshterben';;
+esac
+
 echo -e "${txtbld}Type:${txtrst} $TYPE"
 echo -e "${txtbld}Config:${txtrst} $DEFCONFIG"
 echo -e "${txtbld}ARCH:${txtrst} arm64"
 echo -e "${txtbld}Linux:${txtrst} $KERN_VER"
 echo -e "${txtbld}Username:${txtrst} $KBUILD_BUILD_USER"
+echo -e "${txtbld}Builder:${txtrst} $BUILDER"
 echo -e "${txtbld}BuildDate:${txtrst} $BUILD_DATE"
 echo -e "${txtbld}Filename::${txtrst} $ZIPNAME"
 echo -e " "
@@ -169,13 +177,6 @@ if ! $description_was_specified; then
 		;;
 	esac
 fi
-
-# Builder detection
-[ -n "$HOSTNAME" ] && NAME=$HOSTNAME
-case $NAME in
-	IgorK-*)BUILDER='@igoryan94';;
-	*)BUILDER='@mrshterben';;
-esac
 
 # Build start
 echo -e "$blue    \nStarting kernel compilation...\n $nocol"
