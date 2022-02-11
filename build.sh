@@ -125,7 +125,6 @@ if $clean; then
 	fi
 	echo -e "$grn \nFull cleaning was successful succesfully!\n $nocol"
 	sleep 1.5
-	exit 0
 fi
 
 # Telegram setup
