@@ -217,7 +217,7 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 		<i>${DESC:-No description given...}</i>
 		
 		<b>Maintainer:</b> <code>$KBUILD_BUILD_USER</code>
-		<b>Builder:</b> <code>$BUILDER</code>
+		<b>Builder:</b> $BUILDER
 		<b>Type:</b> <code>$TYPE</code>
 		<b>BuildDate:</b> <code>$BUILD_DATE</code>
 		<b>Filename:</b> <code>$ZIPNAME</code>
