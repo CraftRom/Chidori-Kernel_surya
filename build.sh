@@ -25,14 +25,14 @@ echo -e " "
 # cmdline options
 clean=false
 regen=false
-send_tg=false
+do_not_send_to_tg=false
 help=false
 
 for arg in "$@"; do
 	case $arg in
 		-c|--clean)clean=true; shift;;
 		-r|--regen*)regen=true; shift;;
-		-t|--teleg*)send_tg=true; shift;;
+		-l|--local*)do_not_send_to_tg=true; shift;;
 		-h|--help*)help=true; shift;;
 		-d|--desc*)
 			shift
@@ -53,7 +53,7 @@ done
 case $TYPE in nightly|stable);; *)TYPE=experimental;; esac
 
 # debug:
-#echo "`date`: $clean $regen $send_tg $TYPE $DESC" >>build.sh.log
+#echo "`date`: $clean $regen $help $do_not_send_to_tg $TYPE $DESC" >>build.sh.log
 
 KERN_VER=$(echo "$(make kernelversion)")
 BUILD_DATE=$(date '+%Y-%m-%d  %H:%M')
@@ -88,14 +88,14 @@ fi
 # Help information 
 if $help; then
 	echo -e "Usage: ./build.sh [ -c | --clean, -d <args> | --desc <args>,
-                  -h | --help, -r | --regen, -t | --telegram ]\n
+                  -h | --help, -r | --regen, -l | --local-build ]\n
 These are common commands used in various situations:\n
-$grn -c or --clean			$nocol Remove files in out folder for clean build
-$grn -d or --description		$nocol Adds a description for build.
-				 Used with the <args> argument that contains the description
+$grn -c or --clean			$nocol Remove files in out folder for clean build.
+$grn -d or --description		$nocol Adds a description for build;
+				 Used with the <args> argument that contains the description.
 $grn -h or --help			$nocol List available subcommands.
 $grn -r or --regenerate		$nocol Record changes to the defconfigs.
-$grn -t or --telegram		$nocol Sending the archive to telegram. \n
+$grn -l or --local-build		$nocol Build locally, do not push the archive to Telegram. \n
 Build type names:
 $grn -s or --stable			$nocol Stable build
 $grn -n or --nightly		$nocol Nightly build
@@ -182,7 +182,7 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 
 
 	# Push kernel to telegram
-	if $send_tg; then
+	if ! $do_not_send_to_tg; then
 		push_document "$ZIPNAME" "
 		<b>CHIDORI KERNEL | $DEVICE</b>
 
