@@ -1252,9 +1252,9 @@ static int cluster_init(const struct cpumask *mask)
 	cluster->first_cpu = first_cpu;
 	cluster->min_cpus = 1;
 	cluster->max_cpus = cluster->num_cpus;
-	cluster->need_cpus = 1;
+	cluster->need_cpus = cluster->min_cpus;
 	cluster->offline_delay_ms = 100;
-	cluster->task_thres = UINT_MAX;
+	cluster->task_thres = !first_cpu ? 6 : 4;
 	cluster->nr_prev_assist_thresh = UINT_MAX;
 	cluster->nrrun = cluster->num_cpus;
 	cluster->enable = true;
@@ -1273,9 +1273,9 @@ static int cluster_init(const struct cpumask *mask)
 	cluster->active_cpus = get_active_cpu_count(cluster);
 
 	for (i = 0; i < cluster->num_cpus; i++)
-		cluster->busy_up_thres[i] = 80;
+		cluster->busy_up_thres[i] = !first_cpu ? 60 : 76;
 	for (i = 0; i < cluster->num_cpus; i++)
-		cluster->busy_down_thres[i] = 20;
+		cluster->busy_down_thres[i] = !first_cpu ? 30 : 53;
 
 	cluster->core_ctl_thread = kthread_run(try_core_ctl, (void *) cluster,
 					"core_ctl/%d", first_cpu);
