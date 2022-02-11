@@ -233,6 +233,6 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 else
 	echo -e "$red \nKernel Compilation failed! Fix the errors!\n $nocol"
 	# Push message if build error
-	push_message "<b>Failed building kernel for <code>$DEVICE</code> Please fix it...!</b>"
+	push_message "$BUILDER! <b>Failed building kernel for <code>$DEVICE</code> Please fix it...!</b>"
 	exit 1
 fi
