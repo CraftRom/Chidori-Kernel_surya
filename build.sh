@@ -75,7 +75,7 @@ export KBUILD_BUILD_HOST=CraftRom-build
 # Builder detection
 [ -n "$HOSTNAME" ] && NAME=$HOSTNAME
 case $NAME in
-	IgorK-*)BUILDER='@igoryan94';;
+	IgorK-*)BUILDER='@DfP_DEV';;
 	*)BUILDER='@mrshterben';;
 esac
 
