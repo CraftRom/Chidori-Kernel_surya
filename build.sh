@@ -170,6 +170,13 @@ if ! $description_was_specified; then
 	esac
 fi
 
+# Builder detection
+[ -n "$HOSTNAME" ] && NAME=$HOSTNAME
+case $NAME in
+	IgorK-*)BUILDER='@igoryan94';;
+	*)BUILDER='@mrshterben';;
+esac
+
 # Build start
 echo -e "$blue    \nStarting kernel compilation...\n $nocol"
 make -j$(nproc --all) O=out ARCH=arm64 CC="ccache clang" LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CLANG_TRIPLE=aarch64-linux-gnu- Image.gz dtbo.img
@@ -210,6 +217,7 @@ if [ -f "$kernel" ] && [ -f "$dtb" ] && [ -f "$dtbo" ]; then
 		<i>${DESC:-No description given...}</i>
 		
 		<b>Maintainer:</b> <code>$KBUILD_BUILD_USER</code>
+		<b>Builder:</b> <code>$BUILDER</code>
 		<b>Type:</b> <code>$TYPE</code>
 		<b>BuildDate:</b> <code>$BUILD_DATE</code>
 		<b>Filename:</b> <code>$ZIPNAME</code>
