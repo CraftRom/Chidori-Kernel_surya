@@ -1580,7 +1580,7 @@ static struct ctl_table vm_table[] = {
 		.proc_handler   = pdflush_proc_obsolete,
 	},
 	{
-		.procname	= "rswappiness",
+		.procname	= "swappiness",
 		.data		= &vm_swappiness,
 		.maxlen		= sizeof(vm_swappiness),
 		.mode		= 0644,
@@ -1591,13 +1591,6 @@ static struct ctl_table vm_table[] = {
 #else
 		.extra2		= &one_hundred,
 #endif
-	},
-	{
-		.procname	= "swappiness",
-		.data		= &vm_swappiness,
-		.maxlen		= sizeof(vm_swappiness),
-		.mode		= 0444,
-		.proc_handler	= proc_dointvec,
 	},
 	{
 		.procname       = "want_old_faultaround_pte",
