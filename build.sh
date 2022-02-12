@@ -111,8 +111,8 @@ $grn -d or --description		$nocol Adds a description for build;
 				 Build's description is an important part, so if you do not specify it manually, you will be asked about entering it.
 $grn -h or --help			$nocol List available subcommands.
 $grn -r or --regenerate		$nocol Record changes to the defconfigs.
-$grn -l or --local-build		$nocol Build locally, do not push the archive to Telegram. \n
-$grn -P or --repack		$nocol Skip build, just pack to installer and push (if flag -l not set). \n
+$grn -l or --local-build		$nocol Build locally, do not push the archive to Telegram.
+$grn -P or --repack			$nocol Skip build, just pack to installer and push (if flag -l not set). \n
 Build type names:
 $grn -s or --stable			$nocol Stable build
 $grn -n or --nightly		$nocol Nightly build
