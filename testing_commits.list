@@ -1,3 +1,0 @@
-0ff6ed75fc40a6e2a2bf91db82e9fd93ce32ed60
-	power: kill wakelocks after 10s, kill idle wakelocks too
-	Igor Kozlovskiy <igoryan94@gmail.com>, Fri Feb 11 13:40:38 2022 +0300
