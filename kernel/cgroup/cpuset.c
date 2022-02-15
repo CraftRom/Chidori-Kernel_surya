@@ -63,6 +63,15 @@
 #include <linux/mutex.h>
 #include <linux/cgroup.h>
 #include <linux/wait.h>
+#include <linux/moduleparam.h>
+
+int cpuset_task_nice_top = -20,
+	     cpuset_task_nice_fg = -5,
+	     cpuset_task_nice_bg = 15;
+
+module_param_named(top_nice, cpuset_task_nice_top, int, 0644);
+module_param_named(fg_nice, cpuset_task_nice_fg, int, 0644);
+module_param_named(bg_nice, cpuset_task_nice_bg, int, 0644);
 
 DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
 DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
@@ -1576,7 +1585,11 @@ static void cpuset_attach(struct cgroup_taskset *tset)
 		WARN_ON_ONCE(update_cpus_allowed(cs, task, cpus_attach));
 
 		if (!strncmp(name_buf, "background", 10))
-			set_user_nice(task, 10);
+			set_user_nice(task, cpuset_task_nice_bg);
+		else if (!strncmp(name_buf, "foreground", 10))
+			set_user_nice(task, cpuset_task_nice_fg);
+		else if (!strncmp(name_buf, "top-app", 7))
+			set_user_nice(task, cpuset_task_nice_top);
 
 		cpuset_change_task_nodemask(task, &cpuset_attach_nodemask_to);
 		cpuset_update_task_spread_flag(cs, task);
