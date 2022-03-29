@@ -7115,9 +7115,12 @@ static int __sched_updown_migrate_handler(struct ctl_table *table, int write,
 
 	mutex_lock(&mutex);
 
+    pr_err("Migrate: %s", write ? "write" : "read");
+
 	if (cap_margin_levels == -1 ||
 		table->maxlen != (sizeof(unsigned int) * cap_margin_levels)) {
 		cap_margin_levels = find_capacity_margin_levels();
+        pr_err("Migrate: cap_margin_levels %d", cap_margin_levels);
 		table->maxlen = sizeof(unsigned int) * cap_margin_levels;
 	}
 
@@ -7151,14 +7154,14 @@ static int __sched_updown_migrate_handler(struct ctl_table *table, int write,
 		goto free_old_val;
 	}
 
-	for (i = 0; i < cap_margin_levels; i++) {
+	/*for (i = 0; i < cap_margin_levels; i++) {
 		if (sysctl_sched_capacity_margin_up_array[i] >
 				sysctl_sched_capacity_margin_down_array[i]) {
 			memcpy(data, old_val, table->maxlen);
 			ret = -EINVAL;
 			goto free_old_val;
 		}
-	}
+	}*/
 
 	sched_update_updown_migrate_values(data, cap_margin_levels, boosted);
 

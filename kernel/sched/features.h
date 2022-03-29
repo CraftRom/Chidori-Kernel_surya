@@ -4,7 +4,7 @@
  * them to run sooner, but does not allow tons of sleepers to
  * rip the spread apart.
  */
-SCHED_FEAT(GENTLE_FAIR_SLEEPERS, false)
+SCHED_FEAT(GENTLE_FAIR_SLEEPERS, true)
 
 /*
  * Place new tasks ahead so that they do not starve already running
@@ -36,7 +36,7 @@ SCHED_FEAT(STRICT_SKIP_BUDDY, false)
  * skip buddy i.e task called yield() is always skipped and the
  * next entity is selected to run irrespective of the vruntime
  */
-#define SCHED_FEAT_STRICT_SKIP_BUDDY 1
+//#define SCHED_FEAT_STRICT_SKIP_BUDDY 1
 
 /*
  * Consider buddies to be cache hot, decreases the likelyness of a
@@ -56,7 +56,7 @@ SCHED_FEAT(LB_BIAS, false)
 /*
  * Decrement CPU capacity based on time not spent running tasks
  */
-SCHED_FEAT(NONTASK_CAPACITY, false)
+SCHED_FEAT(NONTASK_CAPACITY, true)
 
 /*
  * Queue remote wakeups on the target CPU and process them
@@ -128,7 +128,7 @@ SCHED_FEAT(ENERGY_AWARE, false)
  *   ON: If the target CPU saves any energy, use that.
  *   OFF: Use whichever of target or backup saves most.
  */
-SCHED_FEAT(EAS_PREFER_IDLE, false)
+SCHED_FEAT(EAS_PREFER_IDLE, true)
 SCHED_FEAT(FIND_BEST_TARGET, true)
 SCHED_FEAT(FBT_STRICT_ORDER, false)
 

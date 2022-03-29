@@ -90,8 +90,8 @@ walt_dec_cfs_rq_stats(struct cfs_rq *cfs_rq, struct task_struct *p) {}
  *
  * (default: 6ms * (1 + ilog(ncpus)), units: nanoseconds)
  */
-unsigned int sysctl_sched_latency			= 6000000ULL;
-unsigned int normalized_sysctl_sched_latency		= 6000000ULL;
+unsigned int sysctl_sched_latency			= 4000000ULL;
+unsigned int normalized_sysctl_sched_latency		= 4000000ULL;
 
 /*
  * Enable/disable honoring sync flag in energy-aware wakeups.
@@ -120,8 +120,8 @@ enum sched_tunable_scaling sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_L
  *
  * (default: 0.75 msec * (1 + ilog(ncpus)), units: nanoseconds)
  */
-unsigned int sysctl_sched_min_granularity		= 750000ULL;
-unsigned int normalized_sysctl_sched_min_granularity	= 750000ULL;
+unsigned int sysctl_sched_min_granularity		= 400000ULL;
+unsigned int normalized_sysctl_sched_min_granularity	= 400000ULL;
 
 /*
  * This value is kept at sysctl_sched_latency/sysctl_sched_min_granularity
@@ -201,12 +201,12 @@ unsigned int sysctl_sched_capacity_margin_down[MAX_MARGIN_LEVELS] = {
 			[0 ... MAX_MARGIN_LEVELS-1] = 1205}; /* ~15% margin */
 
 unsigned int sysctl_sched_capacity_margin_up_boosted[MAX_MARGIN_LEVELS] = {
-	1078, 1078, 1078
+	1078//, 1078
 }; /* 72% margin for small, 5% for big, 0% for big+ */
 
 unsigned int sysctl_sched_capacity_margin_down_boosted[MAX_MARGIN_LEVELS] = {
     //4096, 1280, 1024
-    1205, 1205, 1205
+    1205//, 1205
 }; /* not used for small cores, 72% margin for big, 72% margin for big+ */
 
 unsigned int sched_capacity_margin_up[CPU_NR] = {
@@ -6827,30 +6827,47 @@ schedtune_margin(unsigned long signal, long boost, long capacity)
 	 *   M = B * (capacity  - S)
 	 * The obtained M could be used by the caller to "boost" S.
 	 */
-	if (boost >= 0) {
-		if (capacity > signal) {
-			margin  = capacity - signal;
-			margin *= boost;
-		}
-	} else
-		margin = -signal * boost;
+	//if (boost >= 0) {
+	//	if (capacity > signal) {
+	//		margin  = capacity - signal;
+	//		margin *= boost;
+	//	} else {
+    //      margin = capacity * boost;
+    //  }
+	//} else
+	//	margin = signal * boost;
 
+    //margin = signal * boost;
+    if( boost >= 0 ) {
+        margin = boost * signal;
+    } else {
+        margin = boost * signal * -1;
+    }
 	margin  = reciprocal_divide(margin, schedtune_spc_rdiv);
 
-	if (boost < 0)
-		margin *= -1;
+    if( boost < 0 ) {
+        margin = margin * -1;
+    }
+
 	return margin;
 }
 
 static inline int
 schedtune_cpu_margin(unsigned long util, int cpu)
 {
+	long margin;
 	int boost = schedtune_cpu_boost(cpu);
 
 	if (boost == 0)
 		return 0;
 
-	return schedtune_margin(util, boost, capacity_orig_of(cpu));
+    margin = schedtune_margin(util, boost, capacity_orig_of(cpu));
+
+    //if( boost != 0 ) {
+    //   pr_err("boost_cpu(%d):%d  %d + %d = %d -> %d", cpu, util, boost, margin, util + margin, capacity_orig_of(cpu));
+    //}
+
+	return margin;
 }
 
 static inline long
@@ -6863,8 +6880,13 @@ schedtune_task_margin(struct task_struct *task)
 	if (boost == 0)
 		return 0;
 
+
 	util = task_util_est(task);
 	margin = schedtune_margin(util, boost, SCHED_CAPACITY_SCALE);
+
+    if( boost != 0 ) {
+       pr_err("boost_util:%d  %d + %d = %d -> %d", util, boost, margin, util + margin, SCHED_CAPACITY_SCALE);
+    }
 
 	return margin;
 }
@@ -6893,9 +6915,9 @@ boosted_cpu_util(int cpu, struct sched_walt_cpu_load *walt_load)
 
 	trace_sched_boost_cpu(cpu, util, margin);
 
-	if (sched_feat(SCHEDTUNE_BOOST_UTIL))
+	if (sched_feat(SCHEDTUNE_BOOST_UTIL)) {
 		return util + margin;
-	else
+	} else
 		return util;
 }
 
@@ -6907,9 +6929,9 @@ boosted_task_util(struct task_struct *task)
 
 	trace_sched_boost_task(task, util, margin);
 
-	if (sched_feat(SCHEDTUNE_BOOST_UTIL))
+	if (sched_feat(SCHEDTUNE_BOOST_UTIL)) {
 		return util + margin;
-	else
+	} else
 		return util;
 }
 
@@ -7483,21 +7505,17 @@ static inline bool task_fits_capacity(struct task_struct *p,
 
 static inline bool task_fits_max(struct task_struct *p, int cpu)
 {
-	unsigned long capacity = capacity_orig_of(cpu);
-	unsigned long max_capacity = cpu_rq(cpu)->rd->max_cpu_capacity.val;
+    unsigned long capacity = capacity_orig_of(cpu);
+    unsigned long max_capacity = cpu_rq(cpu)->rd->max_cpu_capacity.val;
 
 	if (capacity == max_capacity)
 		return true;
 
-	/*if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
-			schedtune_task_boost(p) > 0) &&
-			is_min_capacity_cpu(cpu))
-		return false;*/
-
-	if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG) &&
-			is_min_capacity_cpu(cpu))
-		return false;
-
+	if (is_min_capacity_cpu(cpu)) {
+		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG /*||
+			schedtune_task_boost(p) > 0 */ )
+			return false;
+	} 
 
 	return task_fits_capacity(p, capacity, cpu);
 }
