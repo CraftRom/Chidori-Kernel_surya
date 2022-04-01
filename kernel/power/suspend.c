@@ -617,14 +617,14 @@ static void pm_suspend_stats(bool start)
     	sec_int = (long)ts_start.tv_sec - (long)ts_end.tv_sec;
     	nsec_int = (long)ts_start.tv_nsec - (long)ts_end.tv_nsec;
     	elapsed = (sec_int*1000) + (nsec_int/1000000);
-		pr_info("PM: elapsed %ld msec active\n",elapsed);
+		pr_info("elapsed %ld msec active\n",elapsed);
 		return;
 	} else {
     	getnstimeofday(&ts_end);
     	sec_int = (long)ts_end.tv_sec - (long)ts_start.tv_sec;
     	nsec_int = (long)ts_end.tv_nsec - (long)ts_start.tv_nsec;
     	elapsed = (sec_int*1000) + (nsec_int/1000000);
-    	pr_info("PM: elapsed %ld msec suspend\n",elapsed);
+    	pr_info("elapsed %ld msec suspend\n",elapsed);
     }
 }
 
@@ -635,7 +635,7 @@ static void pm_suspend_marker(char *annotation)
 
 	getnstimeofday(&ts);
 	rtc_time_to_tm(ts.tv_sec, &tm);
-	pr_info("PM: suspend %s %d-%02d-%02d %02d:%02d:%02d.%09lu UTC\n",
+	pr_info("suspend %s %d-%02d-%02d %02d:%02d:%02d.%09lu UTC\n",
 		annotation, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
 		tm.tm_hour, tm.tm_min, tm.tm_sec, ts.tv_nsec);
 }
