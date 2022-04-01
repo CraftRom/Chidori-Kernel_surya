@@ -756,6 +756,7 @@ update_frequency:
 	 * framework.
 	 */
 	if (cpufreq_cdev->plat_ops) {
+        dev_info(&cpufreq_cdev->cdev->device,"cpu_cooling %d -> %d", cpu, clip_freq); 
 		if (cpufreq_cdev->plat_ops->ceil_limit)
 			cpufreq_cdev->plat_ops->ceil_limit(cpu,
 						clip_freq);

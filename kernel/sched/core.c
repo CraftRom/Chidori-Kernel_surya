@@ -70,7 +70,7 @@ const_debug unsigned int sysctl_sched_features =
  * Number of tasks to iterate in a single balance run.
  * Limited because this is done with IRQs disabled.
  */
-const_debug unsigned int sysctl_sched_nr_migrate = 128;
+const_debug unsigned int sysctl_sched_nr_migrate = 32;
 
 /*
  * period over which we average the RT time consumption, measured
@@ -2353,6 +2353,9 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 	p->se.nr_migrations		= 0;
 	p->se.vruntime			= 0;
 	p->last_sleep_ts		= 0;
+	p->boost                = 0;
+	p->boost_expires        = 0;
+	p->boost_period         = 0;
 
 	INIT_LIST_HEAD(&p->se.group_node);
 
@@ -4202,7 +4205,8 @@ static void __setscheduler_params(struct task_struct *p,
 		policy &= ~SCHED_RESET_ON_FORK;
 
 	/* Replace SCHED_FIFO with SCHED_RR to reduce latency */
-	p->policy = policy == SCHED_FIFO ? SCHED_RR : policy;
+	//p->policy = policy == SCHED_FIFO ? SCHED_RR : policy;
+    p->policy = policy;
 
 	if (dl_policy(policy))
 		__setparam_dl(p, attr);
@@ -7162,6 +7166,19 @@ static int __sched_updown_migrate_handler(struct ctl_table *table, int write,
 			goto free_old_val;
 		}
 	}*/
+
+    pr_info("sysctl_sched_capacity_margin_up_array");
+    pr_cont("%s", (boosted ? "_boosted:" : ":"));
+	for (i = 0; i < cap_margin_levels; i++) {
+        pr_cont("%d ", sysctl_sched_capacity_margin_up_array[i]);
+	}
+    pr_cont("\n");
+    pr_info("sysctl_sched_capacity_margin_down_array");
+    pr_cont("%s", (boosted ? "_boosted:" : ":"));
+	for (i = 0; i < cap_margin_levels; i++) {
+        pr_cont("%d ", sysctl_sched_capacity_margin_down_array[i]);
+	}
+    pr_cont("\n");
 
 	sched_update_updown_migrate_values(data, cap_margin_levels, boosted);
 

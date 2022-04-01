@@ -2144,7 +2144,8 @@ cpu_util_freq_walt(int cpu, struct sched_walt_cpu_load *walt_load)
 		walt_load->ws = walt_load_reported_window;
 	}
 
-	return (util >= capacity) ? capacity : util;
+	//return (util >= capacity) ? capacity : util;
+    return util;
 }
 
 static inline unsigned long
