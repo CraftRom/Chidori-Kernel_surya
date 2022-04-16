@@ -50,6 +50,7 @@ struct hwmon_node {
 	unsigned int idle_mbps;
 	unsigned int use_ab;
 	unsigned int mbps_zones[NUM_MBPS_ZONES];
+    unsigned int freq_scaler;
 
 	unsigned long prev_ab;
 	unsigned long *dev_ab;
@@ -118,7 +119,7 @@ static ssize_t store_##name(struct device *dev,				\
 #define gov_attr(__attr, min, max)	\
 show_attr(__attr)			\
 store_attr(__attr, (min), (max))	\
-static DEVICE_ATTR(__attr, 0644, show_##__attr, store_##__attr)
+static DEVICE_ATTR(__attr, 0664, show_##__attr, store_##__attr)
 
 #define show_list_attr(name, n) \
 static ssize_t show_list_##name(struct device *dev,			\
@@ -318,7 +319,7 @@ static unsigned long get_bw_and_set_irq(struct hwmon_node *node,
 	unsigned long meas_mbps_zone;
 	unsigned long hist_lo_tol, hyst_lo_tol;
 	struct bw_hwmon *hw = node->hw;
-	unsigned int new_bw, io_percent = node->io_percent;
+	unsigned int new_bw, io_percent = node->io_percent, freq_scaler;
 	ktime_t ts;
 	unsigned int ms = 0;
 
@@ -353,6 +354,9 @@ static unsigned long get_bw_and_set_irq(struct hwmon_node *node,
 		if (node->hist_mem)
 			node->hist_mem--;
 	}
+
+
+    freq_scaler = node->freq_scaler;
 
 	/*
 	 * The AB value that corresponds to the lowest mbps zone greater than
@@ -477,6 +481,8 @@ static unsigned long get_bw_and_set_irq(struct hwmon_node *node,
 		*ab = 0;
 
 	*freq = (new_bw * 100) / io_percent;
+    *freq = *freq + ( (*freq * freq_scaler) / 100);
+
 	trace_bw_hwmon_update(dev_name(node->hw->df->dev.parent),
 				new_bw,
 				*freq,
@@ -813,6 +819,7 @@ gov_attr(hyst_length, 0U, 90U);
 gov_attr(idle_mbps, 0U, 2000U);
 gov_attr(use_ab, 0U, 1U);
 gov_list_attr(mbps_zones, NUM_MBPS_ZONES, 0U, UINT_MAX);
+gov_attr(freq_scaler, 0U, 500U);
 
 static struct attribute *dev_attr[] = {
 	&dev_attr_guard_band_mbps.attr,
@@ -831,6 +838,7 @@ static struct attribute *dev_attr[] = {
 	&dev_attr_use_ab.attr,
 	&dev_attr_mbps_zones.attr,
 	&dev_attr_throttle_adj.attr,
+    &dev_attr_freq_scaler.attr,
 	NULL,
 };
 
@@ -980,6 +988,7 @@ int register_bw_hwmon(struct device *dev, struct bw_hwmon *hwmon)
 	node->use_ab = 1;
 	node->mbps_zones[0] = 0;
 	node->hw = hwmon;
+    node->freq_scaler = 0;
 
 	mutex_init(&node->mon_lock);
 	mutex_lock(&list_lock);
