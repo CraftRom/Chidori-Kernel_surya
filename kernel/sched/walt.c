@@ -313,7 +313,7 @@ update_window_start(struct rq *rq, u64 wallclock, int event)
 	u64 old_window_start = rq->window_start;
 
 	delta = wallclock - rq->window_start;
-	BUG_ON(delta < 0);
+	//BUG_ON(delta < 0);
 	if (delta < sched_ravg_window)
 		return old_window_start;
 
