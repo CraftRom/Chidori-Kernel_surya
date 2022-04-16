@@ -108,8 +108,8 @@ static unsigned long find_victims(int *vindex)
 
 
         if( adj == 0 ) adj = 1;
-        else if ( adj == -100 ) adj = 0;
-        else if ( adj < 700 ) adj = -1;
+        else if ( adj == -100 ) adj = -1;
+        //else if ( adj < 700 ) adj = -1;
 
 		if ( adj < 0 ||
 		    sig->flags & (SIGNAL_GROUP_EXIT | SIGNAL_GROUP_COREDUMP) ||
