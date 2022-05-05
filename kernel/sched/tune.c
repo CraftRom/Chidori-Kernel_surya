@@ -663,6 +663,8 @@ int schedtune_prefer_high_cap(struct task_struct *p)
 	if (unlikely(!schedtune_initialized))
 		return 0;
 
+    if( p->prio > DEFAULT_PRIO ) return 0;
+
 	/* Get prefer_high_cap value */
 	rcu_read_lock();
 	st = task_schedtune(p);
