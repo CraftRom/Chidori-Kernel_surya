@@ -59,6 +59,7 @@ struct devfreq_msm_adreno_tz_data {
 	bool is_64;
 	bool disable_busy_time_burst;
 	bool ctxt_aware_enable;
+    int boost;
     int load_mul;
     int load_div;
     int scale_by_refresh_rate;

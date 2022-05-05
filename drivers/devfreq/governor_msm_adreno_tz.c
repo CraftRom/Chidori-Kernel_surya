@@ -89,10 +89,11 @@ static ssize_t store_##name(struct device *dev,				\
 #define gov_attr(__attr, min, max)	\
 show_attr(__attr)			\
 store_attr(__attr, min, max)		\
-static DEVICE_ATTR(__attr, 0644, show_##__attr, store_##__attr)
+static DEVICE_ATTR(__attr, 0664, show_##__attr, store_##__attr)
 
-gov_attr(load_mul,-30,30);
-gov_attr(load_div,-30,30);
+gov_attr(boost,-100,100);
+gov_attr(load_mul,-100,100);
+gov_attr(load_div,-100,100);
 gov_attr(scale_by_refresh_rate,0,1);
 
 static u64 suspend_time;
@@ -172,6 +173,7 @@ static DEVICE_ATTR(suspend_time, 0444,
 static const struct device_attribute *adreno_tz_attr_list[] = {
 		&dev_attr_gpu_load,
 		&dev_attr_suspend_time,
+        &dev_attr_boost,
         &dev_attr_load_mul,
         &dev_attr_load_div,
         &dev_attr_scale_by_refresh_rate,
@@ -431,8 +433,10 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
 
-        if( priv->load_mul != 0 ) {
-    		scm_data[2] = (priv->bin.busy_time * (10 + priv->load_mul)) / 10;
+        if( priv->boost ) {
+            scm_data[2] = priv->bin.busy_time + (priv->bin.busy_time * priv->boost) / 10;
+        } else if( priv->load_mul != 0 ) {
+    		scm_data[2] = priv->bin.busy_time + (priv->bin.busy_time * priv->load_mul) / 10;
         } else {
 			scm_data[2] = priv->bin.busy_time;
         }
