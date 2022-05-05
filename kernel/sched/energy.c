@@ -89,7 +89,7 @@ void init_sched_energy_costs(void)
 			return;
 		}
 		/* Check if the energy model contains frequency/power values */
-		if (of_find_property(cn, "freq-energy-model", NULL))
+		//if (of_find_property(cn, "freq-energy-model", NULL))
 			freq_energy_model = true;
 
 		for_each_possible_sd_level(sd_level) {
@@ -248,7 +248,7 @@ static int sched_energy_probe(struct platform_device *pdev)
 						break;
 					sge->cap_states[i].cap = cap;
 				}
-				dev_dbg(&pdev->dev,
+				dev_info(&pdev->dev,
 					"cpu=%d freq=%ld cap=%ld power_d0=%ld\n",
 					cpu, freq, sge_l0->cap_states[i].cap,
 					sge_l0->cap_states[i].power);
@@ -268,6 +268,9 @@ static int sched_energy_probe(struct platform_device *pdev)
 	}
 
 	kfree(max_frequencies);
+
+	walt_map_freq_to_load();
+
 	dev_info(&pdev->dev, "Sched-energy-costs capacity updated\n");
 	return 0;
 
