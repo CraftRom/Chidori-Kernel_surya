@@ -1128,11 +1128,6 @@ static int __set_cpus_allowed_ptr(struct task_struct *p,
 	int ret = 0;
 	cpumask_t allowed_mask;
 
-	/* Don't allow perf-critical threads to have non-perf affinities */
-	if ((p->flags & PF_PERF_CRITICAL) && new_mask != cpu_lp_mask &&
-	    new_mask != cpu_perf_mask)
-		return -EINVAL;
-
 	rq = task_rq_lock(p, &rf);
 	update_rq_clock(rq);
 
@@ -1968,9 +1963,6 @@ out:
 
 bool cpus_share_cache(int this_cpu, int that_cpu)
 {
-	if (this_cpu == that_cpu)
-		return true;
-
 	return per_cpu(sd_llc_id, this_cpu) == per_cpu(sd_llc_id, that_cpu);
 }
 #endif /* CONFIG_SMP */
@@ -2140,29 +2132,6 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 	unsigned long flags;
 	int cpu, success = 0;
 
-	if (p == current) {
-		/*
-		 * We're waking current, this means 'p->on_rq' and 'task_cpu(p)
-		 * == smp_processor_id()'. Together this means we can special
-		 * case the whole 'p->on_rq && ttwu_remote()' case below
-		 * without taking any locks.
-		 *
-		 * In particular:
-		 *  - we rely on Program-Order guarantees for all the ordering,
-		 *  - we're serialized against set_special_state() by virtue of
-		 *    it disabling IRQs (this allows not taking ->pi_lock).
-		 */
-		if (!(p->state & state))
-			return false;
-
-		success = 1;
-		cpu = task_cpu(p);
-		trace_sched_waking(p);
-		p->state = TASK_RUNNING;
-		trace_sched_wakeup(p);
-		goto out;
-	}
-
 	/*
 	 * If we are going to wake up a thread waiting for CONDITION we
 	 * need to ensure that CONDITION=1 done by the caller can not be
@@ -2266,7 +2235,6 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 	ttwu_queue(p, cpu, wake_flags);
 unlock:
 	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
-out:
 	if (success)
 		ttwu_stat(p, cpu, wake_flags);
 
@@ -4058,6 +4026,10 @@ void set_user_nice(struct task_struct *p, long nice)
 
 	if (task_nice(p) == nice || nice < MIN_NICE || nice > MAX_NICE)
 		return;
+
+    //if( nice == -20 ) {
+    //    dump_stack();
+    //}
 	/*
 	 * We have to be careful, if called from sys_setpriority(),
 	 * the task might be in the middle of scheduling on another CPU.
@@ -4222,27 +4194,52 @@ static void __setscheduler_params(struct task_struct *p,
 		const struct sched_attr *attr)
 {
 	int policy = attr->sched_policy;
+    int prio = attr->sched_priority;
+    int nice = attr->sched_nice;
+    int org_policy;
+
 
 	if (policy == SETPARAM_POLICY)
 		policy = p->policy;
 	else
 		policy &= ~SCHED_RESET_ON_FORK;
 
+
+    org_policy = policy;
+
+
+    //if( p->signal->oom_score_adj > 0 ) pr_info("__setscheduler_params %d:%d adj=%d (%08X) prio = %d, nice =%d", p->pid, p->tgid, p->signal->oom_score_adj, policy, prio, nice);
+
+    if( p->signal->oom_score_adj >=900 ) { 
+        if( nice < 10 ) nice = 10;
+        if( prio < 20 ) prio = 20;
+        policy = SCHED_IDLE | (org_policy & 0xFFFF0000);
+        pr_info("drop %d:%d adj=%d to SCHED_IDLE (%08X) prio = %d, nice =%d", p->pid, p->tgid, p->signal->oom_score_adj, policy, prio, nice);
+    }
+
+    /*
+    if( p->signal->oom_score_adj > 0 && policy == SCHED_RR && policy == SCHED_FIFO && policy == SCHED_DEADLINE ) {
+        if( nice < 0 ) nice = 0;
+        if( prio < 20 ) prio = 20;
+        policy = SCHED_NORMAL | (org_policy & 0xFFFF0000);
+        pr_info("drop %d:%d adj=%d to SCHED_NORMAL (%08X) prio = %d, nice =%d", p->pid, p->tgid, p->signal->oom_score_adj, policy, prio, nice);
+    }
+    */
+
 	/* Replace SCHED_FIFO with SCHED_RR to reduce latency */
-	//p->policy = policy == SCHED_FIFO ? SCHED_RR : policy;
-    p->policy = policy;
+	p->policy = policy;// == SCHED_FIFO ? SCHED_RR : policy;
 
 	if (dl_policy(policy))
 		__setparam_dl(p, attr);
 	else if (fair_policy(policy))
-		p->static_prio = NICE_TO_PRIO(attr->sched_nice);
+		p->static_prio = NICE_TO_PRIO(nice);
 
 	/*
 	 * __sched_setscheduler() ensures attr->sched_priority == 0 when
 	 * !rt_policy. Always setting this ensures that things like
 	 * getparam()/getattr() don't report silly values for !rt tasks.
 	 */
-	p->rt_priority = attr->sched_priority;
+	p->rt_priority = prio; //attr->sched_priority;
 	p->normal_prio = normal_prio(p);
 	set_load_weight(p);
 }
@@ -6012,6 +6009,7 @@ int do_isolation_work_cpu_stop(void *data)
 	struct rq *rq = cpu_rq(cpu);
 	struct rq_flags rf;
 
+	watchdog_disable(cpu);
 	local_irq_disable();
 
 	irq_migrate_all_off_this_cpu();
@@ -6158,10 +6156,7 @@ int sched_isolate_cpu(int cpu)
 	smp_call_function_any(&avail_cpus, hrtimer_quiesce_cpu, &cpu, 1);
 	smp_call_function_any(&avail_cpus, timer_quiesce_cpu, &cpu, 1);
 
-	watchdog_disable(cpu);
-	irq_lock_sparse();
 	stop_cpus(cpumask_of(cpu), do_isolation_work_cpu_stop, 0);
-	irq_unlock_sparse();
 
 	calc_load_migrate(rq);
 	update_max_interval();
@@ -6373,6 +6368,10 @@ int sched_cpu_deactivate(unsigned int cpu)
 	 *
 	 * Do sync before park smpboot threads to take care the rcu boost case.
 	 */
+
+#ifdef CONFIG_PREEMPT
+	synchronize_sched();
+#endif
 	synchronize_rcu();
 
 #ifdef CONFIG_SCHED_SMT
