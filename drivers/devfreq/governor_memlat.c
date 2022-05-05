@@ -84,7 +84,7 @@ static ssize_t store_##name(struct device *dev,				\
 #define gov_attr(__attr, min, max)	\
 show_attr(__attr)			\
 store_attr(__attr, min, max)		\
-static DEVICE_ATTR(__attr, 0644, show_##__attr, store_##__attr)
+static DEVICE_ATTR(__attr, 0664, show_##__attr, store_##__attr)
 
 static ssize_t show_map(struct device *dev, struct device_attribute *attr,
 			char *buf)
