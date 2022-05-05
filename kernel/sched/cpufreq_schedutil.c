@@ -17,9 +17,28 @@
 #include <linux/slab.h>
 #include <trace/events/power.h>
 #include <linux/sched/sysctl.h>
+#include <linux/moduleparam.h>
 #include "sched.h"
 
 #define SUGOV_KTHREAD_PRIORITY	50
+
+#ifdef MODULE_PARAM_PREFIX
+#undef MODULE_PARAM_PREFIX
+#endif
+#define MODULE_PARAM_PREFIX "sched."
+
+static bool enable_util_debug = false;
+module_param(enable_util_debug, bool, 0664);
+
+static bool enable_freq_debug = false;
+module_param(enable_freq_debug, bool, 0664);
+
+static bool enable_cpu_boost = true;
+module_param(enable_cpu_boost, bool, 0664);
+
+static int cpu_boost_freq = 0;
+module_param(cpu_boost_freq, int, 0664);
+
 
 struct sugov_tunables {
 	struct gov_attr_set attr_set;
@@ -211,17 +230,34 @@ static void sugov_update_commit(struct sugov_policy *sg_policy, u64 time,
 static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 				  unsigned long util, unsigned long max)
 {
+    unsigned int freq_orig;
 	struct cpufreq_policy *policy = sg_policy->policy;
-	unsigned int freq = arch_scale_freq_invariant() ?
-				policy->cpuinfo.max_freq : policy->cur;
+	//unsigned int freq = arch_scale_freq_invariant() ?
+	//			policy->cpuinfo.max_freq : policy->cur;
 
-	freq = (freq + (freq >> 2)) * int_sqrt(util * 100 / max) / 10;
+	unsigned int freq = policy->cpuinfo.max_freq;
+    unsigned int freq_calc = freq;
+
+	//freq = (freq + (freq >> 2)) * int_sqrt(util * 100 / max) / 10;
+    freq_orig = freq = (freq + (freq >> 3)) * util / max;
+
+    if( enable_cpu_boost ) {
+        freq = freq + (freq * cpu_boost_freq)/10;
+    }
+
 	trace_sugov_next_freq(policy->cpu, util, max, freq);
 
 	if (freq == sg_policy->cached_raw_freq && sg_policy->next_freq != UINT_MAX)
 		return sg_policy->next_freq;
 	sg_policy->cached_raw_freq = freq;
-	return cpufreq_driver_resolve_freq(policy, freq);
+
+    freq_calc = freq;
+    freq = cpufreq_driver_resolve_freq(policy, freq);
+
+    if( unlikely(enable_freq_debug) ) {
+        pr_info("get_next_freq (%d): util=%d, max=%d, freq=%d, freq_orig=%d, freq_calc=%d", policy->cpu, util, max, freq, freq_orig, freq_calc);
+    }
+    return freq;
 }
 
 static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu,
@@ -246,6 +282,11 @@ static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu,
 		rt = (rt * max_cap) >> SCHED_CAPACITY_SHIFT;
 		*util = min(*util + rt, max_cap);
 	}
+
+    if( unlikely(enable_util_debug) ) {
+        pr_info("sugov_get_util (%d): util=%d, max_cap=%d", cpu, *util, max_cap);
+    }
+
 }
 
 static void sugov_set_iowait_boost(struct sugov_cpu *sg_cpu, u64 time,
@@ -392,7 +433,7 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 
 		j_util = j_sg_cpu->util;
 		j_max = j_sg_cpu->max;
-		if (j_util * max > j_max * util) {
+		if (j_util * max >= j_max * util) {
 			util = j_util;
 			max = j_max;
 		}
@@ -599,7 +640,7 @@ static void sugov_policy_free(struct sugov_policy *sg_policy)
 static int sugov_kthread_create(struct sugov_policy *sg_policy)
 {
 	struct task_struct *thread;
-	struct sched_param param = { .sched_priority = MAX_USER_RT_PRIO - 1 };
+	struct sched_param param = { .sched_priority = MAX_USER_RT_PRIO / 2 };
 	struct cpufreq_policy *policy = sg_policy->policy;
 	int ret;
 
