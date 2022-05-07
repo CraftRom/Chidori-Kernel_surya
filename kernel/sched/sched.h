@@ -2613,7 +2613,7 @@ extern struct sched_cluster *sched_cluster[NR_CPUS];
 #define WINDOW_STATS_AVG		3
 #define WINDOW_STATS_INVALID_POLICY	4
 
-#define SCHED_UPMIGRATE_MIN_NICE 15
+#define SCHED_UPMIGRATE_MIN_NICE 9
 #define EXITING_TASK_MARKER	0xdeaddead
 
 #define UP_MIGRATION		1
