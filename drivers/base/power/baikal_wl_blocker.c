@@ -31,7 +31,7 @@
 #include <linux/pm_wakeup.h>
 
 
-#define BAIKALOS_WL_BLOCKER_VERSION	"1.0.0"
+#define BAIKALOS_WL_BLOCKER_VERSION	"1.0.1"
 
 static bool active=true;
 module_param(active, bool, 0664);
@@ -41,6 +41,8 @@ const char *ws_list_eq[] = {
     "hal_bluetooth_lock",
     "NETLINK",
     "DIAG_WS",
+    "IPA_CLIENT_APPS_LAN_CONS",
+    "IPA_CLIENT_APPS_WAN_CONS",
     NULL
 };
 
