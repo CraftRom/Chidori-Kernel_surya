@@ -39,6 +39,7 @@ module_param(enable_cpu_boost, bool, 0664);
 static int cpu_boost_freq = 0;
 module_param(cpu_boost_freq, int, 0664);
 
+extern bool enable_perf_boost;
 
 struct sugov_tunables {
 	struct gov_attr_set attr_set;
@@ -165,7 +166,8 @@ static bool sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
 static inline bool use_pelt(void)
 {
 #ifdef CONFIG_SCHED_WALT
-	return (!sysctl_sched_use_walt_cpu_util || walt_disabled);
+	//return (!sysctl_sched_use_walt_cpu_util || walt_disabled);
+    return false;
 #else
 	return true;
 #endif
@@ -175,7 +177,6 @@ static void sugov_update_commit(struct sugov_policy *sg_policy, u64 time,
 				unsigned int next_freq)
 {
 	struct cpufreq_policy *policy = sg_policy->policy;
-	unsigned int cpu;
 
 	if (sg_policy->next_freq == next_freq)
 		return;
@@ -195,9 +196,6 @@ static void sugov_update_commit(struct sugov_policy *sg_policy, u64 time,
 			return;
 
 		policy->cur = next_freq;
-		for_each_cpu(cpu, policy->cpus) {
-			trace_cpu_frequency(next_freq, cpu);
-		}
 	} else {
 		if (use_pelt())
 			sg_policy->work_in_progress = true;
@@ -232,17 +230,20 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 {
     unsigned int freq_orig;
 	struct cpufreq_policy *policy = sg_policy->policy;
-	//unsigned int freq = arch_scale_freq_invariant() ?
-	//			policy->cpuinfo.max_freq : policy->cur;
+	unsigned int freq = arch_scale_freq_invariant() ?
+				policy->cpuinfo.max_freq : policy->cur;
 
-	unsigned int freq = policy->cpuinfo.max_freq;
     unsigned int freq_calc = freq;
+    unsigned int freq_base = freq;
 
-	//freq = (freq + (freq >> 2)) * int_sqrt(util * 100 / max) / 10;
-    freq_orig = freq = (freq + (freq >> 3)) * util / max;
-
-    if( enable_cpu_boost ) {
-        freq = freq + (freq * cpu_boost_freq)/10;
+    if( enable_cpu_boost /*&& cpu_boost_freq*/ ) {
+        if (enable_perf_boost || policy->cpu <= 5)  {
+            freq = ( (freq + (freq >> 2) + (freq * cpu_boost_freq)/10 ) * util ) / max;                                     
+        } else {
+            freq = ( freq * util ) / max;
+        }
+    } else {
+        freq = (freq + (freq >> 2)) * util / max;
     }
 
 	trace_sugov_next_freq(policy->cpu, util, max, freq);
@@ -255,6 +256,8 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
     freq = cpufreq_driver_resolve_freq(policy, freq);
 
     if( unlikely(enable_freq_debug) ) {
+    	//freq_orig = (freq + (freq >> 2)) * int_sqrt(util * 100 / max) / 10;
+        freq_orig = (freq_base + (freq_base >> 2)) * util / max;
         pr_info("get_next_freq (%d): util=%d, max=%d, freq=%d, freq_orig=%d, freq_calc=%d", policy->cpu, util, max, freq, freq_orig, freq_calc);
     }
     return freq;
@@ -425,7 +428,7 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 			j_sg_cpu->iowait_boost_pending = false;
 			continue;
 		}
-		if (j_sg_cpu->flags & SCHED_CPUFREQ_DL) {
+		if (j_sg_cpu->flags & SCHED_CPUFREQ_RT_DL) {
 			/* clear cache when it's bypassed */
 			sg_policy->cached_raw_freq = 0;
 			return policy->cpuinfo.max_freq;
@@ -433,7 +436,7 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 
 		j_util = j_sg_cpu->util;
 		j_max = j_sg_cpu->max;
-		if (j_util * max >= j_max * util) {
+		if (j_util * max > j_max * util) {
 			util = j_util;
 			max = j_max;
 		}
@@ -470,7 +473,7 @@ static void sugov_update_shared(struct update_util_data *hook, u64 time,
 
 	if (sugov_should_update_freq(sg_policy, time) &&
 		!(flags & SCHED_CPUFREQ_CONTINUE)) {
-		if (flags & SCHED_CPUFREQ_DL) {
+		if (flags & SCHED_CPUFREQ_RT_DL) {
 			next_f = sg_policy->policy->cpuinfo.max_freq;
 			/* clear cache when it's bypassed */
 			sg_policy->cached_raw_freq = 0;
@@ -640,7 +643,7 @@ static void sugov_policy_free(struct sugov_policy *sg_policy)
 static int sugov_kthread_create(struct sugov_policy *sg_policy)
 {
 	struct task_struct *thread;
-	struct sched_param param = { .sched_priority = MAX_USER_RT_PRIO / 2 };
+	struct sched_param param = { .sched_priority = MAX_USER_RT_PRIO - 1 };
 	struct cpufreq_policy *policy = sg_policy->policy;
 	int ret;
 
@@ -871,7 +874,7 @@ static int sugov_start(struct cpufreq_policy *policy)
 		memset(sg_cpu, 0, sizeof(*sg_cpu));
 		sg_cpu->cpu = cpu;
 		sg_cpu->sg_policy = sg_policy;
-		sg_cpu->flags = SCHED_CPUFREQ_DL;
+		sg_cpu->flags = SCHED_CPUFREQ_RT;
 		sg_cpu->iowait_boost_max = policy->cpuinfo.max_freq;
 	}
 
