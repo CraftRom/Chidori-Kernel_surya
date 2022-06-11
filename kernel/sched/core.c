@@ -1969,6 +1969,9 @@ out:
 
 bool cpus_share_cache(int this_cpu, int that_cpu)
 {
+	if (this_cpu == that_cpu)
+		return true;
+
 	return per_cpu(sd_llc_id, this_cpu) == per_cpu(sd_llc_id, that_cpu);
 }
 #endif /* CONFIG_SMP */
@@ -4210,30 +4213,12 @@ static void __setscheduler_params(struct task_struct *p,
 	else
 		policy &= ~SCHED_RESET_ON_FORK;
 
-
     org_policy = policy;
 
+    //pr_info("__setscheduler_params %d policy=%X prio=%d nice=%d", p->pid, policy, prio, nice);
 
-    //if( p->signal->oom_score_adj > 0 ) pr_info("__setscheduler_params %d:%d adj=%d (%08X) prio = %d, nice =%d", p->pid, p->tgid, p->signal->oom_score_adj, policy, prio, nice);
-
-    if( p->signal->oom_score_adj >=900 ) { 
-        if( nice < 10 ) nice = 10;
-        if( prio < 20 ) prio = 20;
-        policy = SCHED_IDLE | (org_policy & 0xFFFF0000);
-        pr_info("drop %d:%d adj=%d to SCHED_IDLE (%08X) prio = %d, nice =%d", p->pid, p->tgid, p->signal->oom_score_adj, policy, prio, nice);
-    }
-
-    /*
-    if( p->signal->oom_score_adj > 0 && policy == SCHED_RR && policy == SCHED_FIFO && policy == SCHED_DEADLINE ) {
-        if( nice < 0 ) nice = 0;
-        if( prio < 20 ) prio = 20;
-        policy = SCHED_NORMAL | (org_policy & 0xFFFF0000);
-        pr_info("drop %d:%d adj=%d to SCHED_NORMAL (%08X) prio = %d, nice =%d", p->pid, p->tgid, p->signal->oom_score_adj, policy, prio, nice);
-    }
-    */
-
-	/* Replace SCHED_FIFO with SCHED_RR to reduce latency */
-	p->policy = policy;// == SCHED_FIFO ? SCHED_RR : policy;
+    //p->policy = policy == SCHED_FIFO ? SCHED_RR : policy;
+    p->policy = policy;
 
 	if (dl_policy(policy))
 		__setparam_dl(p, attr);
