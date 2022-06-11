@@ -57,7 +57,7 @@ module_param(enable_task_boost, bool, 0664);
 static bool enable_boost_debug = false;
 module_param(enable_boost_debug, bool, 0664);
 
-static bool enable_perf_boost = false;
+bool enable_perf_boost = true;
 module_param(enable_perf_boost, bool, 0664);
 
 #ifdef CONFIG_SMP
@@ -171,7 +171,7 @@ unsigned int __read_mostly sysctl_sched_energy_aware = 1;
 unsigned int sysctl_sched_wakeup_granularity		= 1000000UL;
 unsigned int normalized_sysctl_sched_wakeup_granularity	= 1000000UL;
 
-const_debug unsigned int sysctl_sched_migration_cost	= 500000UL;
+const_debug unsigned int sysctl_sched_migration_cost	= 1000000UL;
 DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
 
 #ifdef CONFIG_SCHED_WALT
@@ -4376,6 +4376,7 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 {
 	struct sched_entity *left = __pick_first_entity(cfs_rq);
 	struct sched_entity *se;
+	bool strict_skip = false;
 
 	/*
 	 * If curr is set we have to see if its left of the leftmost entity
@@ -4395,13 +4396,15 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 
 		if (se == curr) {
 			second = __pick_first_entity(cfs_rq);
+			if (sched_feat(STRICT_SKIP_BUDDY))
+				strict_skip = true;
 		} else {
 			second = __pick_next_entity(se);
 			if (!second || (curr && entity_before(curr, second)))
 				second = curr;
 		}
 
-		if (second && (sched_feat(STRICT_SKIP_BUDDY) ||
+		if (second && (strict_skip ||
 		    wakeup_preempt_entity(second, left) < 1))
 			se = second;
 	}
@@ -6102,8 +6105,13 @@ struct energy_env {
  */
 static unsigned long cpu_util_without(int cpu, struct task_struct *p)
 {
-	struct cfs_rq *cfs_rq;
 	unsigned int util;
+
+
+#ifndef CONFIG_SCHED_WALT
+	struct cfs_rq *cfs_rq;
+#endif
+
 
 #ifdef CONFIG_SCHED_WALT
 	/*
@@ -6808,7 +6816,7 @@ wake_affine_weight(struct sched_domain *sd, struct task_struct *p,
 	if (sync)
 		prev_eff_load += 1;
 
-	return this_eff_load < prev_eff_load ? this_cpu : nr_cpumask_bits;
+	return this_eff_load <= prev_eff_load;
 }
 
 static int wake_affine(struct sched_domain *sd, struct task_struct *p,
@@ -7920,7 +7928,7 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				 * also prefer lower order cpu.
 				 */
 				if (new_util == best_active_util &&
-					new_util_cuml >= best_active_cuml_util)
+				    new_util_cuml > best_active_cuml_util)
 					continue;
 				min_wake_util = wake_util;
 				best_active_util = new_util;
@@ -7970,12 +7978,13 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				 * IOW, prefer a deep IDLE LITTLE CPU vs a
 				 * shallow idle big CPU.
 				 */
-				if (capacity_orig >= target_capacity &&
+				if (capacity_orig == target_capacity &&
 				    sysctl_sched_cstate_aware &&
 				    best_idle_cstate < idle_idx)
 					continue;
 
 				if (best_idle_cstate == idle_idx &&
+					target_capacity == capacity_orig &&
 					(best_idle_cpu == prev_cpu ||
 					(i != prev_cpu &&
 					new_util_cuml > best_idle_cuml_util)))
@@ -8600,6 +8609,19 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	int want_affine = 0;
 	int want_energy = 0;
 	int sync = wake_flags & WF_SYNC;
+
+	if (energy_aware()) {
+		rcu_read_lock();
+		new_cpu = find_energy_efficient_cpu(energy_sd, p,
+						cpu, prev_cpu, sync,
+						sibling_count_hint);
+		rcu_read_unlock();
+
+		if (unlikely(new_cpu < 0))
+			new_cpu = prev_cpu;
+
+		return new_cpu;
+	}
 
 	rcu_read_lock();
 

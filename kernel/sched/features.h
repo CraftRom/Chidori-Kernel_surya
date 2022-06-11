@@ -17,7 +17,7 @@ SCHED_FEAT(START_DEBIT, true)
  * wakeup-preemption), since its likely going to consume data we
  * touched, increases cache locality.
  */
-SCHED_FEAT(NEXT_BUDDY, true)
+SCHED_FEAT(NEXT_BUDDY, false)
 
 /*
  * Prefer to schedule the task that ran last (when we did
@@ -51,18 +51,18 @@ SCHED_FEAT(WAKEUP_PREEMPTION, true)
 
 SCHED_FEAT(HRTICK, false)
 SCHED_FEAT(DOUBLE_TICK, false)
-SCHED_FEAT(LB_BIAS, true)
+SCHED_FEAT(LB_BIAS, false)
 
 /*
  * Decrement CPU capacity based on time not spent running tasks
  */
-SCHED_FEAT(NONTASK_CAPACITY, false)
+SCHED_FEAT(NONTASK_CAPACITY, true)
 
 /*
  * Queue remote wakeups on the target CPU and process them
  * using the scheduler IPI. Reduces rq->lock contention/bounces.
  */
-SCHED_FEAT(TTWU_QUEUE, true)
+SCHED_FEAT(TTWU_QUEUE, false)
 
 /*
  * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
@@ -128,7 +128,7 @@ SCHED_FEAT(ENERGY_AWARE, false)
  *   ON: If the target CPU saves any energy, use that.
  *   OFF: Use whichever of target or backup saves most.
  */
-SCHED_FEAT(EAS_PREFER_IDLE, false)
+SCHED_FEAT(EAS_PREFER_IDLE, true)
 SCHED_FEAT(FIND_BEST_TARGET, true)
 SCHED_FEAT(FBT_STRICT_ORDER, false)
 
@@ -148,4 +148,4 @@ SCHED_FEAT(SCHEDTUNE_BOOST_HOLD_ALL, false)
  * generally leads to usage of higher frequencies.
  * If disabled, boosts will only bias tasks to higher-capacity CPUs.
  */
-SCHED_FEAT(SCHEDTUNE_BOOST_UTIL, true)
+SCHED_FEAT(SCHEDTUNE_BOOST_UTIL, false)

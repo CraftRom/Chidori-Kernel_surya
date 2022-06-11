@@ -2973,9 +2973,11 @@ void note_task_waking(struct task_struct *p, u64 wallclock);
 static inline bool task_placement_boost_enabled(struct task_struct *p)
 {
 	if (task_sched_boost(p))
-		return sched_boost_policy() != SCHED_BOOST_NONE;
+	if (likely(sched_boost_policy() == SCHED_BOOST_NONE))
+		return false;
 
-	return false;
+
+	return task_sched_boost(p);
 }
 
 
@@ -3134,5 +3136,6 @@ struct sched_avg_stats {
 	int nr;
 	int nr_misfit;
 	int nr_max;
+	int nr_scaled;
 };
 extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
