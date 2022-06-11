@@ -254,7 +254,7 @@ schedtune_cpu_update(int cpu, u64 now)
 	/* Ensures boost_max is non-negative when all cgroup boost values
 	 * are neagtive. Avoids under-accounting of cpu capacity which may cause
 	 * task stacking and frequency spikes.*/
-	boost_max = max(boost_max, 0);
+	//boost_max = max(boost_max, 0);
 	bg->boost_max = boost_max;
 	bg->boost_ts = boost_ts;
 }
@@ -469,7 +469,7 @@ static int sched_colocate_write(struct cgroup_subsys_state *css,
 		return -EPERM;
 
 	st->colocate = !!colocate;
-	st->colocate_update_disabled = true;
+	//st->colocate_update_disabled = true;
 	return 0;
 }
 
@@ -554,7 +554,7 @@ int schedtune_task_boost(struct task_struct *p)
 	struct schedtune *st;
 	int task_boost;
 
-	if (unlikely(!schedtune_initialized) || unlikely(is_battery_saver_on()))
+	if (unlikely(!schedtune_initialized) /*|| unlikely(is_battery_saver_on())*/)
 		return 0;
 
 	/* Get task boost value */
@@ -571,7 +571,7 @@ int schedtune_prefer_idle(struct task_struct *p)
 	struct schedtune *st;
 	int prefer_idle;
 
-	if (unlikely(!schedtune_initialized) || unlikely(is_battery_saver_on()))
+	if (unlikely(!schedtune_initialized) /*|| unlikely(is_battery_saver_on())*/)
 		return 0;
 
 	/* Get prefer_idle value */
