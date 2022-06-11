@@ -435,7 +435,7 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 
         if( priv->boost ) {
             scm_data[2] = priv->bin.busy_time + (priv->bin.busy_time * priv->boost) / 10;
-        } else if( priv->load_mul != 0 ) {
+        } else if( priv->load_mul ) {
     		scm_data[2] = priv->bin.busy_time + (priv->bin.busy_time * priv->load_mul) / 10;
         } else {
 			scm_data[2] = priv->bin.busy_time;
