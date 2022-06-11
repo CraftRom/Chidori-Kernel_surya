@@ -401,15 +401,16 @@
 
 &pm6150_qg {
 	qcom,battery-data = <&mtp_batterydata>;
-	qcom,qg-iterm-ma = <200>;
+	qcom,qg-iterm-ma = <350>;
 	qcom,hold-soc-while-full;
 	qcom,linearize-soc;
-	qcom,cl-feedback-on;
+    qcom,cl-disable = <1>;
+	//qcom,cl-feedback-on;
 	qcom,tcss-enable;
 	qcom,bass-enable;
-	qcom,vbatt-cutoff-mv = <3200>;
-	qcom,vbatt-low-mv = <3300>;
-	qcom,vbatt-low-cold-mv = <3500>;
+	qcom,vbatt-cutoff-mv = <3400>;
+	qcom,vbatt-low-mv = <3500>;
+	qcom,vbatt-low-cold-mv = <3700>;
 	qcom,vbatt-empty-mv = <3000>;
 	qcom,vbatt-empty-cold-mv = <3000>;
 	qcom,s3-entry-ibat-ua = <25000>;
@@ -432,7 +433,6 @@
 		95 10
 		99 5>;
 	qcom,qg-fast-chg-config;
-    qcom,cl-disable = <1>;
 };
 
 &pm6150_charger {
@@ -453,14 +453,15 @@
 	qcom,battery-data = <&mtp_batterydata>;
 	qcom,usb-icl-ua = <3000000>;
 	qcom,auto-recharge-soc = <99>;
+    qcom,fcc-max-ua = <5000000>;
 	qcom,fcc-max-ua-surya = <5000000>;
 	qcom,fcc-max-ua-karna = <6000000>;
-	qcom,fv-max-uv = <4450000>;
+	qcom,fv-max-uv = <4480000>;
 	qcom,chg-term-src = <1>;
 	qcom,chg-term-current-ma = <(-200)>;
 	qcom,sw-jeita-enable;
 	//qcom,fcc-stepping-enable;
-	qcom,suspend-input-on-debug-batt;
+	//qcom,suspend-input-on-debug-batt;
 	qcom,sec-charger-config = <0>;
 	qcom,thermal-mitigation = <6000000 5500000 5000000 5000000 5000000 4400000 4200000
 				   3800000 3800000 3600000 3400000 3200000 3000000 2200000
