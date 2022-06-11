@@ -2530,7 +2530,7 @@ static int binder_proc_transaction(struct binder_transaction *t,
 
 	binder_inner_proc_lock(proc);
 	if (proc->is_frozen) {
-		proc->sync_recv |= !oneway;
+		//proc->sync_recv |= !oneway;
 		proc->async_recv |= oneway;
 	}
 
@@ -2538,8 +2538,13 @@ static int binder_proc_transaction(struct binder_transaction *t,
 			(thread && thread->is_dead)) {
 		binder_inner_proc_unlock(proc);
 		binder_node_unlock(node);
+        if( proc->is_frozen ) pr_warn("frozen process transaction ignored %d, %d", proc->pid, oneway);
 		return proc->is_frozen ? BR_FROZEN_REPLY : BR_DEAD_REPLY;
 	}
+
+    if( proc->is_frozen ) {
+        pr_warn("frozen process transaction passed %d, %d", proc->pid, oneway);    
+    }
 
 	if (!thread && !pending_async)
 		thread = binder_select_thread_ilocked(proc);
@@ -2554,7 +2559,7 @@ static int binder_proc_transaction(struct binder_transaction *t,
 		binder_enqueue_work_ilocked(&t->work, &node->async_todo);
 	}
 
-	if (!pending_async)
+	if (!pending_async || (proc->is_frozen && thread) )
 		binder_wakeup_thread_ilocked(proc, thread, !oneway /* sync */);
 
 	proc->outstanding_txns++;
@@ -4919,8 +4924,7 @@ static int binder_ioctl_get_freezer_info(
 			found = true;
 			binder_inner_proc_lock(target_proc);
 			txns_pending = binder_txns_pending_ilocked(target_proc);
-			info->sync_recv |= target_proc->sync_recv |
-					(txns_pending << 1);
+			info->sync_recv |= target_proc->sync_recv; // | (txns_pending << 1);
 			info->async_recv |= target_proc->async_recv;
 			binder_inner_proc_unlock(target_proc);
 		}
