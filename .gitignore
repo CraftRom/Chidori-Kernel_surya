@@ -20,7 +20,6 @@
 *.mod.c
 *.lst
 *.symtypes
-*.order
 *.elf
 *.bin
 *.tar
@@ -118,10 +117,16 @@ all.config
 # fetched Android config fragments
 kernel/configs/android-*.cfg
 
-/out/
+#
+#Ignoring Android.bp link file
+#
+Android.bp
+
+/out
 /libufdt/
-/AnyKernel3/
+/AnyKernel3
 /stock_32/
 /stock/
 /clang/
-
+*.zip
+build.log
